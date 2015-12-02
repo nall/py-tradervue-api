@@ -35,14 +35,14 @@ class TraderVueLogFormatter(logging.Formatter):
     return '%s-%s- %-15s %s%s' % (prefix, severity, self.formatTime(record, datefmt = None), record.msg, suffix)
 
 class TraderVue:
-  def __init__(self, username, password, user_agent, target_user = None):
+  def __init__(self, username, password, user_agent, target_user = None, baseurl = 'https://www.tradervue.com', verbose_http = False):
     self.username = username
     self.password = password
     self.user_agent = user_agent
     self.target_user = target_user
-    self.baseurl = 'https://www.tradervue.com/api/v1'
+    self.baseurl = '/'.join([baseurl, 'api', 'v1'])
     self.log = logging.getLogger('tradervue')
-    self.verbose_http = True
+    self.verbose_http = verbose_http
 
   # Simple wrappers for requests API
   def __get   (self, url, params) : return self.__make_request(requests.get,    url, params = params)
@@ -55,6 +55,9 @@ class TraderVue:
     headers = { 'Accept': 'application/json',
                 'Content-Type': 'application/json',
                 'User-Agent': self.user_agent }
+
+    if payload is not None:
+      payload = json.dumps(payload, indent = 2)
 
     # Add Target User header if that's been requested
     #
@@ -112,7 +115,7 @@ class TraderVue:
     if initial_risk is not None: data['initial_risk'] = initial_risk
     if len(tags) > 0: data['tags'] = copy.deepcopy(tags)
 
-    r = self.__post(url, json.dumps(data))
+    r = self.__post(url, data)
     if r.status_code == 201:
       self.log.debug("Successfully created new trade for %s: %s" % (symbol, r.text))
       if return_url: 
@@ -224,7 +227,7 @@ class TraderVue:
       self.log.debug("Successfully queried trade ID %s" % (trade_id))
       return json.loads(r.text)
     else:
-      self.__handle_bad_http_response(r, "Unable to query trade ID" % (trade_id), show_url = True)
+      self.__handle_bad_http_response(r, "Unable to query trade ID %s" % (trade_id), show_url = True)
       return None
 
   def get_trade_executions(self, trade_id):
@@ -241,7 +244,7 @@ class TraderVue:
       self.log.debug("Successfully queried trade ID %s executions (found %d executions)" % (trade_id, len(executions)))
       return executions
     else:
-      self.__handle_bad_http_response(r, "Unable to query trade ID executions" % (trade_id), show_url = True)
+      self.__handle_bad_http_response(r, "Unable to query trade ID %s executions" % (trade_id), show_url = True)
       return None
 
   def get_trade_comments(self, trade_id):
@@ -258,7 +261,7 @@ class TraderVue:
       self.log.debug("Successfully queried trade ID %s comments (found %d comments)" % (trade_id, len(comments)))
       return comments
     else:
-      self.__handle_bad_http_response(r, "Unable to query trade ID comments" % (trade_id), show_url = True)
+      self.__handle_bad_http_response(r, "Unable to query trade ID %s comments" % (trade_id), show_url = True)
       return None
 
   def update_trade(self, trade_id, notes = None, shared = None, initial_risk = None, tags = None):
@@ -318,7 +321,7 @@ class TraderVue:
 
     if tags is not None: data['tags'] = copy.deepcopy(tags)
 
-    return self.__import_executions(json.dumps(data, indent=2), import_retries, wait_for_completion, wait_retries, secs_per_wait_retry)
+    return self.__import_executions(data, import_retries, wait_for_completion, wait_retries, secs_per_wait_retry)
 
   def __import_executions(self, data, import_retries, wait_for_completion, wait_retries, secs_per_wait_retry):
     url = '/'.join([self.baseurl, 'imports'])
@@ -376,5 +379,62 @@ class TraderVue:
         self.log.error("Unsupported import status '%s'" % (data['status']))
         return None
     else:
+      return None
+
+  def get_users(self):
+    url = '/'.join([self.baseurl, 'users'])
+
+    r = self.__get(url, None)
+    if r.status_code == 200:
+      users = json.loads(r.text)
+      if 'users' not in users:
+        self.log.error("Unable to find 'users' key in users results: %s" % (r.text))
+        return None
+      users = users['users']
+      self.log.debug("Successfully queried users (found %d users)" % (len(users)))
+      return users
+    else:
+      self.__handle_bad_http_response(r, "Unable to query users", show_url = True)
+      return None
+
+  def get_user(self, user_id):
+    user_id = str(user_id)
+    url = '/'.join([self.baseurl, 'users'])
+
+    r = self.__get(url, None)
+    if r.status_code == 200:
+      user = json.loads(r.text)
+      self.log.debug("Successfully queried user ID %s" % (user_id))
+      return user
+    else:
+      self.__handle_bad_http_response(r, "Unable to query user ID %s" % (user_id), show_url = True)
+      return None
+
+  def update_user(self, user_id, plan = None):
+    user_id = str(user_id)
+    url = '/'.join([self.baseurl, 'users'])
+
+    r = self.__put(url, data)
+    if r.status_code == 200:
+      self.log.debug("Successfully updated fields [%s] of user ID %s: %s" % (' '.join(data.keys()), user_id, r.text))
+      return True
+    else:
+      self.__handle_bad_http_response(r, "Unable to update fields [%s] of user ID" % (' '.join(data.keys()), user_id))
+      return False
+
+  def create_user(self, username, plan, email, password, trial_end = None):
+    url = '/'.join([self.baseurl, 'users'])
+
+    data = { 'username': username, 'plan': plan, 'email': email, 'password': password }
+    if trial_end is not None: data['trial_end'] = trial_end.strftime('%Y-%m-%d')
+
+    r = self.__post(url, data)
+    if r.status_code == 201:
+      payload = json.loads(r.text)
+      user_id = payload['id']
+      self.log.debug("Successfully created new user ID %s for %s: %s" % (user_id, username, r.text))
+      return user_id
+    else:
+      self.__handle_bad_http_response(r, "New trade creation for %s" % (symbol))
       return None
 
