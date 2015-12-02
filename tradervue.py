@@ -125,13 +125,17 @@ class TraderVue:
       return None
 
   def delete_trades(self, *trade_ids):
+    results = []
     trade_id = str(trade_id)
-    result = True
+
     for trade_id in trade_ids:
       if not self.delete_trade(trade_id):
         self.log.error("Unable to delete trade ID %s" % (trade_id))
-        result = False
-    return result
+        results.append(False)
+      else:
+        results.append(True)
+
+    return results
 
   def delete_trade(self, trade_id):
     trade_id = str(trade_id)
@@ -184,7 +188,7 @@ class TraderVue:
       trades = self.__get_trades(data)
       if trades is None:
         self.log.debug("Found error condition when querying %s" % (data))
-        break
+        return None
       elif len(trades) == 0:
         self.log.debug("No trades were found when querying %s" % (data))
         break
