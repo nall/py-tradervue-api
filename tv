@@ -1,0 +1,44 @@
+#!/usr/bin/env python
+# vim: filetype=python shiftwidth=2 tabstop=2 expandtab
+
+import argparse
+import datetime
+import logging
+import pprint
+import sys
+import tradervue
+
+LOG = None
+
+def setup_logging():
+  global LOG
+  LOG = logging.getLogger()
+  LOG.setLevel(logging.DEBUG)
+  console = logging.StreamHandler()
+  console.setFormatter(tradervue.TraderVueLogFormatter())
+  LOG.addHandler(console)
+
+def parse_cmdline_args():
+  parser = argparse.ArgumentParser(description='TraderVue Command Line Client')
+  parser.add_argument('--username', '-u', type = str, required = True, help = "TraderVue username")
+  parser.add_argument('--password', '-p', type = str, required = True, help = "TraderVue password")
+
+  parser.add_argument('--create', '-c', action='store_true', help = "Create a new trade")
+  parser.add_argument('--symbol', type = str, help = "The symbol to use for created trades")
+  parser.add_argument('--tag', action = 'append', type = str, help = "The symbol to use for created trades")
+  parser.add_argument('--notes', type = str, help = "The notes to use for created trades")
+  parser.add_argument('--initial_risk', type = str, help = "The initial risk to use for created trades")
+  parser.add_argument('--shared', action = 'store_true', help = "Specify this if the trade should be shared with others")
+  return parser.parse_args()
+
+def main():
+  global LOG
+  setup_logging()
+  args = parse_cmdline_args()
+
+  tv = tradervue.TraderVue(args.username, args.password, 'PyTraderVue (jon@nall.cc)')
+  tid = tv.create_trade(args.symbol, args.notes, args.initial_risk, args.shared, args.tag)
+  LOG.info("Created trade ID %s" % (tid))
+
+if __name__ == "__main__":
+  sys.exit(main())
