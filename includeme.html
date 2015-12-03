@@ -131,7 +131,35 @@
 <dl class="class">
 <dt id="tradervue.TraderVue">
 <em class="property">class </em><code class="descclassname">tradervue.</code><code class="descname">TraderVue</code><span class="sig-paren">(</span><em>username</em>, <em>password</em>, <em>user_agent</em>, <em>target_user=None</em>, <em>baseurl='https://www.tradervue.com'</em>, <em>verbose_http=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.TraderVue" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><dl class="method">
+<dt id="tradervue.TraderVue.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>username</em>, <em>password</em>, <em>user_agent</em>, <em>target_user=None</em>, <em>baseurl='https://www.tradervue.com'</em>, <em>verbose_http=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.TraderVue.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct a TraderVue instance.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>username</strong> (<em>str</em>) &#8211; the TraderVue username</li>
+<li><strong>password</strong> (<em>str</em>) &#8211; the TraderVue password</li>
+<li><strong>user_agent</strong> (<em>str</em>) &#8211; the user agent to use in requests. Should be something like: MyApp (<a class="reference external" href="mailto:your&#37;&#52;&#48;email&#46;com">your<span>&#64;</span>email<span>&#46;</span>com</a>)</li>
+<li><strong>target_user</strong> (<em>str or None</em>) &#8211; the user id to issues requests on behalf of. To be used by organization administrators (if the feature is enabled)</li>
+<li><strong>baseurl</strong> (<em>str</em>) &#8211; the organization&#8217;s URL if using a local server</li>
+<li><strong>verbose_http</strong> (<em>bool</em>) &#8211; set to True for verbose dumping of HTTP requests and reponses (requires logging of DEBUG severity to be enabled)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the TraderVue instance</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#tradervue.TraderVue" title="tradervue.TraderVue">TraderVue</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
 
 </div>
 
