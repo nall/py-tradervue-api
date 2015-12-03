@@ -9,7 +9,7 @@ Welcome to py-tradervue's documentation!
 Contents:
 
 .. toctree::
-   :maxdepth: 10
+   :maxdepth: 2
 
    py-tradervue
 
