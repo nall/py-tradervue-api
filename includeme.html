@@ -184,6 +184,73 @@
 </table>
 </dd></dl>
 
+<dl class="method">
+<dt id="tradervue.TraderVue.delete_trade">
+<code class="descname">delete_trade</code><span class="sig-paren">(</span><em>trade_id</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.TraderVue.delete_trade" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete the specified trade ID.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>trade_id</strong> (<em>str</em>) &#8211; The trade ID to be deleted.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal"><span class="pre">True</span></code> if the trade was deleted successfully, <code class="docutils literal"><span class="pre">False</span></code> otherwise.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tradervue.TraderVue.delete_trades">
+<code class="descname">delete_trades</code><span class="sig-paren">(</span><em>*trade_ids</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.TraderVue.delete_trades" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete the specified trade IDs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>trade_ids</strong> (<em>str</em>) &#8211; The trade IDs to be deleted.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A list of bool values (one per trade ID argument). <code class="docutils literal"><span class="pre">True</span></code> indicates the trade was deleted successfully. <code class="docutils literal"><span class="pre">False</span></code> indicates an error occured while deleting the trade ID.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list of bool</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tradervue.TraderVue.get_trades">
+<code class="descname">get_trades</code><span class="sig-paren">(</span><em>symbol=None</em>, <em>tag_expr=None</em>, <em>side=None</em>, <em>duration=None</em>, <em>startdate=None</em>, <em>enddate=None</em>, <em>winners=None</em>, <em>max_trades=25</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.TraderVue.get_trades" title="Permalink to this definition">¶</a></dt>
+<dd><p>Query for trades matching the specified criteria</p>
+<p>All arguments to this function are optional. If not specified, they are not part of the query.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>symbol</strong> (<em>str or None</em>) &#8211; Find trades on this symbol</li>
+<li><strong>tag_expr</strong> (<em>str or None</em>) &#8211; Find trades matching this tag expression. Read more about tag expressions in this <a class="reference external" href="http://blog.tradervue.com/2012/10/10/new-tag-combination-report/">blog entry</a>.</li>
+<li><strong>side</strong> (<em>str or None</em>) &#8211; Find trades matching the specified side. Must be one of the following values: <code class="docutils literal"><span class="pre">Long</span></code> or <code class="docutils literal"><span class="pre">Short</span></code>.</li>
+<li><strong>duration</strong> (<em>str or None</em>) &#8211; Find trades matching the specified duration. Must be one of the following values: <code class="docutils literal"><span class="pre">Intraday</span></code> or <code class="docutils literal"><span class="pre">Multiday</span></code>.</li>
+<li><strong>startdate</strong> (<em>datetime or None</em>) &#8211; Find trades occuring on or after the specified time</li>
+<li><strong>enddate</strong> (<em>datetime or None</em>) &#8211; Find trades occuring on or before the specified time</li>
+<li><strong>winners</strong> (<em>bool or None</em>) &#8211; Find trades where the P&amp;L is positive (or negative for a <code class="docutils literal"><span class="pre">False</span></code> value).</li>
+<li><strong>max_trades</strong> (<em>int or None</em>) &#8211; Return at most the specified number of trades</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">a list of trades matching the specified critiera or <code class="docutils literal"><span class="pre">None</span></code> if an error is encountered</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list or none</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </dd></dl>
 
 </div>
