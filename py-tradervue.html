@@ -1,0 +1,480 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Python TraderVue API &mdash; py-tradervue 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="py-tradervue 1.0 documentation" href="index.html" />
+    <link rel="prev" title="Welcome to py-tradervue’s documentation!" href="index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to py-tradervue’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">py-tradervue 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="python-tradervue-api">
+<h1>Python TraderVue API<a class="headerlink" href="#python-tradervue-api" title="Permalink to this headline">¶</a></h1>
+<p>This is a Python implementation of the <a class="reference external" href="https://www.tradervue.com">TraderVue</a> API.</p>
+<p>Below is a small example usage:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">tradervue</span>
+<span class="n">tv</span> <span class="o">=</span> <span class="n">tradervue</span><span class="o">.</span><span class="n">TraderVue</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">user_agent</span><span class="p">)</span>
+<span class="n">trades</span> <span class="o">=</span> <span class="n">tv</span><span class="o">.</span><span class="n">get_trades</span><span class="p">(</span><span class="n">symbol</span> <span class="o">=</span> <span class="s">&#39;OEX&#39;</span><span class="p">,</span> <span class="n">startdate</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">(</span><span class="mi">2015</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">trades</span><span class="p">:</span>
+  <span class="k">print</span> <span class="s">&quot;Trade </span><span class="si">%s</span><span class="s"> Profit/Loss: $</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="s">&#39;gross_pl&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<dl class="class">
+<dt id="tradervue.TraderVue">
+<em class="property">class </em><code class="descclassname">tradervue.</code><code class="descname">TraderVue</code><span class="sig-paren">(</span><em>username</em>, <em>password</em>, <em>user_agent</em>, <em>target_user=None</em>, <em>baseurl='https://www.tradervue.com'</em>, <em>verbose_http=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.TraderVue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Here&#8217;s some class stuff more</p>
+<p>Construct a TraderVue instance.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>username</strong> (<em>str</em>) &#8211; the TraderVue username</li>
+<li><strong>password</strong> (<em>str</em>) &#8211; the TraderVue password</li>
+<li><strong>user_agent</strong> (<em>str</em>) &#8211; the user agent to use in requests. Should be something like: <code class="docutils literal"><span class="pre">MyApp</span> <span class="pre">(your&#64;email.com)</span></code></li>
+<li><strong>target_user</strong> (<em>str or None</em>) &#8211; the user id to issues requests on behalf of. To be used by organization administrators (if the feature is enabled)</li>
+<li><strong>baseurl</strong> (<em>str</em>) &#8211; the organization&#8217;s URL if using a local server</li>
+<li><strong>verbose_http</strong> (<em>bool</em>) &#8211; set to True for verbose dumping of HTTP requests and reponses (requires logging of DEBUG severity to be enabled)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the TraderVue instance</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#tradervue.TraderVue" title="tradervue.TraderVue">TraderVue</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="tradervue.TraderVue.create_trade">
+<code class="descname">create_trade</code><span class="sig-paren">(</span><em>symbol</em>, <em>notes=None</em>, <em>initial_risk=None</em>, <em>shared=False</em>, <em>tags=[]</em>, <em>return_url=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.TraderVue.create_trade" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new trade. This is the equivalent of the &#8216;New Trade&#8217; feature on the website.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>symbol</strong> (<em>str</em>) &#8211; The symbol for the trade</li>
+<li><strong>notes</strong> (<em>str or None</em>) &#8211; Any notes for the trade. Can include <a class="reference external" href="https://daringfireball.net/projects/markdown/">Markdown</a> syntax.</li>
+<li><strong>initial_risk</strong> (<em>float or None</em>) &#8211; The initial risk for the trade</li>
+<li><strong>shared</strong> (<em>bool</em>) &#8211; True if this trade should be shared with other TraderVue users</li>
+<li><strong>tags</strong> (<em>list</em>) &#8211; A list of tags to be applied to this trade. Each tag should be a string.</li>
+<li><strong>return_url</strong> (<em>bool</em>) &#8211; If set to <code class="docutils literal"><span class="pre">True</span></code>, the return value will be the value of the <code class="docutils literal"><span class="pre">Location</span></code> header. If <code class="docutils literal"><span class="pre">False</span></code> the trade ID is returned.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The new trade ID if <code class="docutils literal"><span class="pre">return_url</span></code> is False or the Location URL if it is <code class="docutils literal"><span class="pre">True</span></code>. <code class="docutils literal"><span class="pre">None</span></code> is returned if an error occurs.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">str or None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tradervue.TraderVue.create_user">
+<code class="descname">create_user</code><span class="sig-paren">(</span><em>username</em>, <em>email</em>, <em>plan</em>, <em>password</em>, <em>trial_end=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.TraderVue.create_user" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new user.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This method is only available to organization managers.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>username</strong> (<em>str</em>) &#8211; the username for the new user</li>
+<li><strong>email</strong> (<em>str</em>) &#8211; the email for the new user</li>
+<li><strong>plan</strong> (<em>str</em>) &#8211; the TraderVue plan level for the new user. Should be one of <code class="docutils literal"><span class="pre">'Free'</span></code>, <code class="docutils literal"><span class="pre">'Silver'</span></code>, or <code class="docutils literal"><span class="pre">'Gold'</span></code>.</li>
+<li><strong>password</strong> (<em>str</em>) &#8211; the password for the new user</li>
+<li><strong>trial_end</strong> (<em>datetime or None</em>) &#8211; If specified, set a date for when the new user&#8217;s trial period ends</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the newly created user ID if successful or <code class="docutils literal"><span class="pre">None</span></code> if an error occurs</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">str or None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tradervue.TraderVue.delete_trade">
+<code class="descname">delete_trade</code><span class="sig-paren">(</span><em>trade_id</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.TraderVue.delete_trade" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete the specified trade ID.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>trade_id</strong> (<em>str</em>) &#8211; The trade ID to be deleted.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal"><span class="pre">True</span></code> if the trade was deleted successfully, <code class="docutils literal"><span class="pre">False</span></code> otherwise.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tradervue.TraderVue.delete_trades">
+<code class="descname">delete_trades</code><span class="sig-paren">(</span><em>*trade_ids</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.TraderVue.delete_trades" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete the specified trade IDs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>trade_ids</strong> (<em>str</em>) &#8211; The trade IDs to be deleted.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A list of bool values (one per trade ID argument). <code class="docutils literal"><span class="pre">True</span></code> indicates the trade was deleted successfully. <code class="docutils literal"><span class="pre">False</span></code> indicates an error occured while deleting the trade ID.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list of bool</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tradervue.TraderVue.get_trade">
+<code class="descname">get_trade</code><span class="sig-paren">(</span><em>trade_id</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.TraderVue.get_trade" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get detailed information about the specified trade ID.</p>
+<p>The dict returned from this method contains keys as defined in the <a class="reference external" href="https://github.com/tradervue/api-docs/blob/master/trades.md">TraderVue Trade Documentation</a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>trade_id</strong> (<em>str</em>) &#8211; The trade ID to query.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">a dict containing information about the trade ID or <code class="docutils literal"><span class="pre">None</span></code> on error.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">dict or None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tradervue.TraderVue.get_trade_comments">
+<code class="descname">get_trade_comments</code><span class="sig-paren">(</span><em>trade_id</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.TraderVue.get_trade_comments" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get detailed information about the comments of the specified trade ID.</p>
+<p>The dict returned from this method contains keys as defined in the <a class="reference external" href="https://github.com/tradervue/api-docs/blob/master/trades.md">TraderVue Trade Documentation</a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>trade_id</strong> (<em>str</em>) &#8211; The trade ID to query.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">a dict containing information about the comments for trade ID or <code class="docutils literal"><span class="pre">None</span></code> on error.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">dict or None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tradervue.TraderVue.get_trade_executions">
+<code class="descname">get_trade_executions</code><span class="sig-paren">(</span><em>trade_id</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.TraderVue.get_trade_executions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get detailed information about the executions of the specified trade ID.</p>
+<p>The dict returned from this method contains keys as defined in the <a class="reference external" href="https://github.com/tradervue/api-docs/blob/master/trades.md">TraderVue Trade Documentation</a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>trade_id</strong> (<em>str</em>) &#8211; The trade ID to query.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">a dict containing information about the executions for trade ID or <code class="docutils literal"><span class="pre">None</span></code> on error.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">dict or None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tradervue.TraderVue.get_trades">
+<code class="descname">get_trades</code><span class="sig-paren">(</span><em>symbol=None</em>, <em>tag_expr=None</em>, <em>side=None</em>, <em>duration=None</em>, <em>startdate=None</em>, <em>enddate=None</em>, <em>winners=None</em>, <em>max_trades=25</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.TraderVue.get_trades" title="Permalink to this definition">¶</a></dt>
+<dd><p>Query for trades matching the specified criteria.</p>
+<p>All arguments to this method are optional. If not specified, they are not part of the query.</p>
+<p>The list returned from this method contains dict objects which have fields as defined in the <a class="reference external" href="https://github.com/tradervue/api-docs/blob/master/trades.md">TraderVue Trade Documentation</a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>symbol</strong> (<em>str or None</em>) &#8211; Find trades on this symbol</li>
+<li><strong>tag_expr</strong> (<em>str or None</em>) &#8211; Find trades matching this tag expression. Read more about tag expressions in this <a class="reference external" href="http://blog.tradervue.com/2012/10/10/new-tag-combination-report/">blog entry</a>.</li>
+<li><strong>side</strong> (<em>str or None</em>) &#8211; Find trades matching the specified side. Must be one of the following values: <code class="docutils literal"><span class="pre">'Long'</span></code> or <code class="docutils literal"><span class="pre">'Short'</span></code>.</li>
+<li><strong>duration</strong> (<em>str or None</em>) &#8211; Find trades matching the specified duration. Must be one of the following values: <code class="docutils literal"><span class="pre">'Intraday'</span></code> or <code class="docutils literal"><span class="pre">'Multiday'</span></code>.</li>
+<li><strong>startdate</strong> (<em>datetime or None</em>) &#8211; Find trades occuring on or after the specified time</li>
+<li><strong>enddate</strong> (<em>datetime or None</em>) &#8211; Find trades occuring on or before the specified time</li>
+<li><strong>winners</strong> (<em>bool or None</em>) &#8211; Find trades where the P&amp;L is positive (or negative for a <code class="docutils literal"><span class="pre">False</span></code> value).</li>
+<li><strong>max_trades</strong> (<em>int or None</em>) &#8211; Return at most the specified number of trades</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">a list of trades matching the specified critiera or <code class="docutils literal"><span class="pre">None</span></code> if an error is encountered</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list or none</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tradervue.TraderVue.get_user">
+<code class="descname">get_user</code><span class="sig-paren">(</span><em>user_id</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.TraderVue.get_user" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get detailed information about the specified user ID.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This method is only available to organization managers.</p>
+</div>
+<p>The dict returned from this method contains keys as defined in the <a class="reference external" href="https://github.com/tradervue/api-docs/blob/master/users.md">TraderVue User Documentation</a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">information on the specified user ID or <code class="docutils literal"><span class="pre">None</span></code> if an error occurs</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list or None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tradervue.TraderVue.get_users">
+<code class="descname">get_users</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.TraderVue.get_users" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the list of users for the organization.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This method is only available to organization managers.</p>
+</div>
+<p>The dict objects in the list returned from this method contains keys as defined in the <a class="reference external" href="https://github.com/tradervue/api-docs/blob/master/users.md">TraderVue User Documentation</a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a list of users in the organization or <code class="docutils literal"><span class="pre">None</span></code> on error</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list or None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tradervue.TraderVue.import_executions">
+<code class="descname">import_executions</code><span class="sig-paren">(</span><em>executions</em>, <em>account_tag=None</em>, <em>tags=None</em>, <em>allow_duplicates=False</em>, <em>overlay_commissions=False</em>, <em>import_retries=3</em>, <em>wait_for_completion=False</em>, <em>wait_retries=3</em>, <em>secs_per_wait_retry=15</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.TraderVue.import_executions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Import the specified trade executions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>executions</strong> (<em>list</em>) &#8211; The executions to import. This should be a list of dicts. Each dict should have keys as specified in the <a class="reference external" href="https://github.com/tradervue/api-docs/blob/master/imports.md">TraderVue Import Documentation</a>.</li>
+<li><strong>account_tag</strong> (<em>str or None</em>) &#8211; An account tag to use when importing. If <code class="docutils literal"><span class="pre">None</span></code>, no account tag is used.</li>
+<li><strong>tags</strong> (<em>list or None</em>) &#8211; A list of tags to be applied to this trade. The list values should be strings. IF <code class="docutils literal"><span class="pre">None</span></code>, no tags are applied to the trade.</li>
+<li><strong>allow_duplicates</strong> (<em>bool</em>) &#8211; set this to <code class="docutils literal"><span class="pre">True</span></code> if you wish to disable Tradervue&#8217;s automatic duplicate-detection when importing this data.</li>
+<li><strong>overlay_commissions</strong> (<em>bool</em>) &#8211; set this to <code class="docutils literal"><span class="pre">True</span></code> to run this import in commission-overlay mode; no new trades will be created, and existing trades will be updated with commission and fee data. See the Tradervue <a class="reference external" href="http://www.tradervue.com/help/older_commissions">help article</a> for more details.</li>
+<li><strong>import_retries</strong> (<em>int</em>) &#8211; TraderVue allows only one import at a time. If this method is invoked while TraderVue is busy, the import will be retried up to this many times before returning <code class="docutils literal"><span class="pre">None</span></code>.</li>
+<li><strong>wait_for_completion</strong> (<em>bool</em>) &#8211; <p>If <code class="docutils literal"><span class="pre">True</span></code>, this method will block until the import has been processed by TraderVue. In this case, the import success/failure information will be the return value from this method. Details on that data structure are available in the <a class="reference external" href="https://github.com/tradervue/api-docs/blob/master/imports.md">TraderVue Import Documentation</a>.</p>
+</li>
+<li><strong>wait_retries</strong> (<em>int</em>) &#8211; The number of times to poll the import status before giving up and returning <code class="docutils literal"><span class="pre">None</span></code>.</li>
+<li><strong>secs_per_wait_retry</strong> (<em>int</em>) &#8211; The poll interval in seconds to query import status.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">If <code class="docutils literal"><span class="pre">wait_for_completion</span></code> is <code class="docutils literal"><span class="pre">True</span></code> returns the import status dict or <code class="docutils literal"><span class="pre">None</span></code> on error. Otherwise returns <code class="docutils literal"><span class="pre">True</span></code> on success or <code class="docutils literal"><span class="pre">False</span></code> if an error occurs.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">dict or None</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
+<li><strong>ValueError</strong> &#8211; if <code class="docutils literal"><span class="pre">executions</span></code> is empty</li>
+<li><strong>TypeError</strong> &#8211; if <code class="docutils literal"><span class="pre">executions</span></code> or <code class="docutils literal"><span class="pre">tags</span></code> are not list objects</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tradervue.TraderVue.import_status">
+<code class="descname">import_status</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.TraderVue.import_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Query status of the current import.</p>
+<p>The dict returned from this method contains keys as defined in the <a class="reference external" href="https://github.com/tradervue/api-docs/blob/master/imports.md">TraderVue Import Documentation</a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a dict of the current import state or <code class="docutils literal"><span class="pre">None</span></code> on error</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">dict or None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tradervue.TraderVue.update_trade">
+<code class="descname">update_trade</code><span class="sig-paren">(</span><em>trade_id</em>, <em>notes=None</em>, <em>shared=None</em>, <em>initial_risk=None</em>, <em>tags=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.TraderVue.update_trade" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update fields of the specified trade ID.</p>
+<p>All arguments (other than <code class="docutils literal"><span class="pre">trade_id</span></code>) to this method are optional. If not specified, that particular field won&#8217;t be modified.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>trade_id</strong> (<em>str</em>) &#8211; The trade ID to update.</li>
+<li><strong>notes</strong> (<em>str or None</em>) &#8211; <p>Any notes for the trade. Can include <a class="reference external" href="https://daringfireball.net/projects/markdown/">Markdown</a> syntax.</p>
+</li>
+<li><strong>shared</strong> (<em>bool or None</em>) &#8211; True if this trade should be shared with other TraderVue users</li>
+<li><strong>initial_risk</strong> (<em>float or None</em>) &#8211; The initial risk for the trade</li>
+<li><strong>tags</strong> (<em>list or None</em>) &#8211; A list of tags to be applied to this trade. Each tag should be a string.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><code class="docutils literal"><span class="pre">True</span></code> if the trade was updated successfully, <code class="docutils literal"><span class="pre">False</span></code> otherwise.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">bool</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tradervue.TraderVue.update_user">
+<code class="descname">update_user</code><span class="sig-paren">(</span><em>user_id</em>, <em>username=None</em>, <em>email=None</em>, <em>plan=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.TraderVue.update_user" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update fields for the specified user ID.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This method is only available to organization managers.</p>
+</div>
+<p>All arguments (other than <code class="docutils literal"><span class="pre">user_id</span></code>) to this method are optional. If not specified, that particular field won&#8217;t be modified.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>user_id</strong> (<em>str</em>) &#8211; the user ID to update</li>
+<li><strong>username</strong> (<em>str or None</em>) &#8211; the username for the specified user ID</li>
+<li><strong>email</strong> (<em>str or None</em>) &#8211; the email for the specified user ID</li>
+<li><strong>plan</strong> (<em>str or None</em>) &#8211; the TraderVue plan level. Should be one of <code class="docutils literal"><span class="pre">'Free'</span></code>, <code class="docutils literal"><span class="pre">'Silver'</span></code>, or <code class="docutils literal"><span class="pre">'Gold'</span></code>.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><code class="docutils literal"><span class="pre">True</span></code> if the user ID was successfully updated, <code class="docutils literal"><span class="pre">False</span></code> otherwise</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">bool</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="">Python TraderVue API</a></li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to py-tradervue&#8217;s documentation!</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to py-tradervue’s documentation!"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">py-tradervue 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2015, Jon Nall.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.3.
+    </div>
+  </body>
+</html>
