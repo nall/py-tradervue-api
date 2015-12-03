@@ -5,7 +5,7 @@
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 PAPER         =
-BUILDDIR      = ../../py-tradervue--docs
+BUILDDIR      = ../../py-tradervue-docs
 PDFBUILDDIR   = /tmp
 PDF           = ../manual.pdf
 

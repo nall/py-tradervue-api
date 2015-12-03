@@ -11,13 +11,12 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   includeme
+   py-tradervue
 
 
 Indices and tables
 ==================
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`
 
