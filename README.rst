@@ -1,6 +1,10 @@
 Python TraderVue API
 **************************
-This is a Python implementation of the `TraderVue <https://www.tradervue.com>`_ API.
+This is a Python implementation of the `TraderVue <https://www.tradervue.com>`_ API. All publicly documented REST endpoints are supported including:
+
+* Trade management
+* Importing & querying trade executions
+* User management
 
 Below is a small example usage:
 
