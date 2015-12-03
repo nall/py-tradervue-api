@@ -129,17 +129,15 @@
   <div class="section" id="python-tradervue-api">
 <h1>Python TraderVue API<a class="headerlink" href="#python-tradervue-api" title="Permalink to this headline">¶</a></h1>
 <p>This is a Python implementation of the <a class="reference external" href="https://www.tradervue.com">TraderVue</a> API.</p>
-<dl class="docutils">
-<dt>Here&#8217;s a small example usage: ::</dt>
-<dd><p class="first">import datetime
-import tradervue
-tv = tradervue.TraderVue(username, password, user_agent)
-trades = tv.get_trades(symbol = &#8216;OEX&#8217;, startdate = datetime.date(2015, 9, 1))
-for t in trades:</p>
-<blockquote class="last">
-<div>print &#8220;Trade %s Profit/Loss: $%s&#8221; % (t[&#8216;id&#8217;], t[&#8216;gross_pl&#8217;])</div></blockquote>
-</dd>
-</dl>
+<p>Below is a small example usage:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">tradervue</span>
+<span class="n">tv</span> <span class="o">=</span> <span class="n">tradervue</span><span class="o">.</span><span class="n">TraderVue</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">user_agent</span><span class="p">)</span>
+<span class="n">trades</span> <span class="o">=</span> <span class="n">tv</span><span class="o">.</span><span class="n">get_trades</span><span class="p">(</span><span class="n">symbol</span> <span class="o">=</span> <span class="s">&#39;OEX&#39;</span><span class="p">,</span> <span class="n">startdate</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">(</span><span class="mi">2015</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">trades</span><span class="p">:</span>
+  <span class="k">print</span> <span class="s">&quot;Trade </span><span class="si">%s</span><span class="s"> Profit/Loss: $</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="s">&#39;gross_pl&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
 <dl class="class">
 <dt id="tradervue.TraderVue">
 <em class="property">class </em><code class="descclassname">tradervue.</code><code class="descname">TraderVue</code><span class="sig-paren">(</span><em>username</em>, <em>password</em>, <em>user_agent</em>, <em>target_user=None</em>, <em>baseurl='https://www.tradervue.com'</em>, <em>verbose_http=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.TraderVue" title="Permalink to this definition">¶</a></dt>
