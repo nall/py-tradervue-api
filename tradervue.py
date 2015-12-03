@@ -1,5 +1,13 @@
-#!/usr/bin/env python
 # vim: filetype=python shiftwidth=2 tabstop=2 expandtab
+
+"""
+.. module:: tradervue
+   :platform: Unix, Windows
+   :synopsis: Implements the TraderVue API
+
+.. moduleauthor:: Jon Nall <jon.nall@gmail.com>
+
+"""
 
 import copy
 import json
@@ -35,7 +43,22 @@ class TraderVueLogFormatter(logging.Formatter):
     return '%s-%s- %-15s %s%s' % (prefix, severity, self.formatTime(record, datefmt = None), record.msg, suffix)
 
 class TraderVue:
+  """Here's some class stuff more
+  """
+
   def __init__(self, username, password, user_agent, target_user = None, baseurl = 'https://www.tradervue.com', verbose_http = False):
+    """Construct a TraderVue instance.
+
+       :param str username: the TraderVue username
+       :param str password: the TraderVue password
+       :param str user_agent: the user agent to use in requests. Should be something like: ``MyApp (your@email.com)``
+       :param target_user: the user id to issues requests on behalf of. To be used by organization administrators (if the feature is enabled)
+       :param str baseurl: the organization's URL if using a local server
+       :param bool verbose_http: set to True for verbose dumping of HTTP requests and reponses (requires logging of DEBUG severity to be enabled)
+       :type target_user: str or None
+       :return: the TraderVue instance
+       :rtype: TraderVue
+    """
     self.username = username
     self.password = password
     self.user_agent = user_agent
@@ -108,6 +131,19 @@ class TraderVue:
       self.log.error("No permission to issue API calls on behalf of user %d")
 
   def create_trade(self, symbol, notes = None, initial_risk = None, shared = False, tags = [], return_url = False):
+    """Create a new trade. This is the equivalent of the 'New Trade' feature on the website.
+
+       :param str symbol: The symbol for the trade
+       :param notes: Any notes for the trade. Can include `Markdown <https://daringfireball.net/projects/markdown/>`_ syntax.
+       :param initial_risk: The initial risk for the trade
+       :param bool shared: True if this trade should be shared with other TraderVue users
+       :param list tags: A list of tags to be applied to this trade. Each tag should be a string.
+       :param bool return_url: If set to ``True``, the return value will be the value of the ``Location`` header. If ``False`` the trade ID is returned.
+       :type notes: str or None
+       :type initial_risk: float or None
+       :return: The new trade ID if ``return_url`` is False or the Location URL if it is ``True``. ``None`` is returned if an error occurs.
+       :rtype: str or None
+    """
     url = '/'.join([self.baseurl, 'trades'])
 
     data = { 'symbol': symbol, 'shared': shared }
@@ -128,6 +164,12 @@ class TraderVue:
       return None
 
   def delete_trades(self, *trade_ids):
+    """Delete the specified trade IDs.
+
+       :param str trade_ids: The trade IDs to be deleted.
+       :return: A list of bool values (one per trade ID argument). ``True`` indicates the trade was deleted successfully. ``False`` indicates an error occured while deleting the trade ID.
+       :rtype: list of bool
+    """
     results = []
     trade_id = str(trade_id)
 
@@ -141,6 +183,12 @@ class TraderVue:
     return results
 
   def delete_trade(self, trade_id):
+    """Delete the specified trade ID.
+
+       :param str trade_id: The trade ID to be deleted.
+       :return: ``True`` if the trade was deleted successfully, ``False`` otherwise.
+       :rtype: bool
+    """
     trade_id = str(trade_id)
     url = '/'.join([self.baseurl, 'trades', trade_id])
 
@@ -152,7 +200,32 @@ class TraderVue:
       self.__handle_bad_http_response(r, "Deletion of tradeID %s" % (trade_id))
       return False
 
-  def get_trades(self, symbol = None, tag_expr = None, side = None, duration = None, startdate = None, enddate = None, max_trades = 25):
+  def get_trades(self, symbol = None, tag_expr = None, side = None, duration = None, startdate = None, enddate = None, winners = None, max_trades = 25):
+    """Query for trades matching the specified criteria.
+
+       All arguments to this method are optional. If not specified, they are not part of the query. 
+
+       The list returned from this method contains dict objects which have fields as defined in the `TraderVue Trade Documentation <https://github.com/tradervue/api-docs/blob/master/trades.md>`_.
+
+       :param symbol: Find trades on this symbol
+       :param tag_expr: Find trades matching this tag expression. Read more about tag expressions in this `blog entry <http://blog.tradervue.com/2012/10/10/new-tag-combination-report/>`_.
+       :param side: Find trades matching the specified side. Must be one of the following values: ``'Long'`` or ``'Short'``.
+       :param duration: Find trades matching the specified duration. Must be one of the following values: ``'Intraday'`` or ``'Multiday'``.
+       :param startdate: Find trades occuring on or after the specified time
+       :param enddate: Find trades occuring on or before the specified time
+       :param winners: Find trades where the P&L is positive (or negative for a ``False`` value).
+       :param max_trades: Return at most the specified number of trades
+       :type symbol: str or None
+       :type tag_expr: str or None
+       :type side: str or None
+       :type duration: str or None
+       :type startdate: datetime or None
+       :type enddate: datetime or None
+       :type winners: bool or None
+       :type max_trades: int or None
+       :return: a list of trades matching the specified critiera or ``None`` if an error is encountered
+       :rtype: list or none
+    """
     data = { }
     if symbol is not None: data['symbol'] = symbol
 
@@ -178,6 +251,7 @@ class TraderVue:
 
     if startdate is not None: data['startdate'] = startdate.strftime('%m/%d/%Y')
     if enddate is not None: data['enddate'] = enddate.strftime('%m/%d/%Y')
+    if winners is not None: data['plgross'] = 'W' if winners else 'L'
 
     total_pages = 1
     if max_trades > 100:
@@ -219,6 +293,14 @@ class TraderVue:
       return None
 
   def get_trade(self, trade_id):
+    """Get detailed information about the specified trade ID.
+
+       The dict returned from this method contains keys as defined in the `TraderVue Trade Documentation <https://github.com/tradervue/api-docs/blob/master/trades.md>`_.
+
+       :param str trade_id: The trade ID to query.
+       :return: a dict containing information about the trade ID or ``None`` on error.
+       :rtype: dict or None
+    """
     trade_id = str(trade_id)
     url = '/'.join([self.baseurl, 'trades', trade_id])
 
@@ -231,6 +313,14 @@ class TraderVue:
       return None
 
   def get_trade_executions(self, trade_id):
+    """Get detailed information about the executions of the specified trade ID.
+
+       The dict returned from this method contains keys as defined in the `TraderVue Trade Documentation <https://github.com/tradervue/api-docs/blob/master/trades.md>`_.
+
+       :param str trade_id: The trade ID to query.
+       :return: a dict containing information about the executions for trade ID or ``None`` on error.
+       :rtype: dict or None
+    """
     trade_id = str(trade_id)
     url = '/'.join([self.baseurl, 'trades', trade_id, 'executions'])
 
@@ -248,6 +338,14 @@ class TraderVue:
       return None
 
   def get_trade_comments(self, trade_id):
+    """Get detailed information about the comments of the specified trade ID.
+
+       The dict returned from this method contains keys as defined in the `TraderVue Trade Documentation <https://github.com/tradervue/api-docs/blob/master/trades.md>`_.
+
+       :param str trade_id: The trade ID to query.
+       :return: a dict containing information about the comments for trade ID or ``None`` on error.
+       :rtype: dict or None
+    """
     trade_id = str(trade_id)
     url = '/'.join([self.baseurl, 'trades', trade_id, 'comments'])
 
@@ -265,6 +363,22 @@ class TraderVue:
       return None
 
   def update_trade(self, trade_id, notes = None, shared = None, initial_risk = None, tags = None):
+    """Update fields of the specified trade ID.
+
+       All arguments (other than ``trade_id``) to this method are optional. If not specified, that particular field won't be modified.
+
+       :param str trade_id: The trade ID to update.
+       :param notes: Any notes for the trade. Can include `Markdown <https://daringfireball.net/projects/markdown/>`_ syntax.
+       :param shared: True if this trade should be shared with other TraderVue users
+       :param initial_risk: The initial risk for the trade
+       :param list tags: A list of tags to be applied to this trade. Each tag should be a string.
+       :type notes: str or None
+       :type shared: bool or None
+       :type initial_risk: float or None
+       :type tags: list or None
+       :return: ``True`` if the trade was updated successfully, ``False`` otherwise.
+       :rtype: bool
+    """
     trade_id = str(trade_id)
     url = '/'.join([self.baseurl, 'trades', trade_id])
 
@@ -287,6 +401,13 @@ class TraderVue:
       return False
 
   def import_status(self):
+    """Query status of the current import.
+
+       The dict returned from this method contains keys as defined in the `TraderVue Import Documentation <https://github.com/tradervue/api-docs/blob/master/imports.md>`_.
+
+       :return: a dict of the current import state or ``None`` on error
+       :rtype: dict or None
+    """
     url = '/'.join([self.baseurl, 'imports'])
 
     r = self.__get(url, None)
@@ -303,13 +424,31 @@ class TraderVue:
       return None 
 
   def import_executions(self, executions, account_tag = None, tags = None, allow_duplicates = False, overlay_commissions = False, import_retries = 3, wait_for_completion = False, wait_retries = 3, secs_per_wait_retry = 15):
+    """Import the specified trade executions.
+
+       :param list executions: The executions to import. This should be a list of dicts. Each dict should have keys as specified in the `TraderVue Import Documentation <https://github.com/tradervue/api-docs/blob/master/imports.md>`_.
+       :param account_tag: An account tag to use when importing. If ``None``, no account tag is used.
+       :param tags: A list of tags to be applied to this trade. The list values should be strings. IF ``None``, no tags are applied to the trade.
+       :param bool allow_duplicates: set this to ``True`` if you wish to disable Tradervue's automatic duplicate-detection when importing this data.
+       :param bool overlay_commissions: set this to ``True`` to run this import in commission-overlay mode; no new trades will be created, and existing trades will be updated with commission and fee data. See the Tradervue `help article <http://www.tradervue.com/help/older_commissions>`_ for more details.
+       :param int import_retries: TraderVue allows only one import at a time. If this method is invoked while TraderVue is busy, the import will be retried up to this many times before returning ``None``.
+       :param bool wait_for_completion: If ``True``, this method will block until the import has been processed by TraderVue. In this case, the import success/failure information will be the return value from this method. Details on that data structure are available in the `TraderVue Import Documentation <https://github.com/tradervue/api-docs/blob/master/imports.md>`_.
+       :param int wait_retries: The number of times to poll the import status before giving up and returning ``None``.
+       :param int secs_per_wait_retry: The poll interval in seconds to query import status.
+       :type account_tag: str or None
+       :type tags: list or None
+       :return: If ``wait_for_completion`` is ``True`` returns the import status dict or ``None`` on error. Otherwise returns ``True`` on success or ``False`` if an error occurs.
+       :rtype: dict or None
+       :raises ValueError: if ``executions`` is empty
+       :raises TypeError: if ``executions`` or ``tags`` are not list objects
+    """
     if len(executions) == 0:
       raise ValueError("Found 0 executions to import in import_executions. Must specify at least 1")
     if not isinstance(executions, list):
-      raise ValueError("The executions argument to import_executions must be a list, but found %s" % (type(executions)))
+      raise TypeError("The executions argument to import_executions must be a list, but found %s" % (type(executions)))
     if tags is not None:
       if not isinstance(tags, list):
-        raise ValueError("The tags argument (if specified) to import_executions must be a list, but found %s" % (type(tags)))
+        raise TypeError("The tags argument (if specified) to import_executions must be a list, but found %s" % (type(tags)))
     
     data = { 'executions': copy.deepcopy(executions), 'allow_duplicates': allow_duplicates, 'overlay_commissions': overlay_commissions }
 
@@ -336,7 +475,7 @@ class TraderVue:
         status = data['status']
         if not status in ['queued']:
           self.log.error("Unexpected status '%s' from importing executions: %s" % (status, r.text))
-          return None
+          return False
         else:
           self.log.debug("Import request successful: %s" % (r.text))
           import_posted = True
@@ -347,11 +486,11 @@ class TraderVue:
         time.sleep(5)
       else:
         self.__handle_bad_http_response(r, "Unable to import executions")
-        return None
+        return False
 
     if not import_posted:
       self.log.error("Unable to import executions after %d attempts. Giving up." % (import_retries))
-      return None 
+      return False 
     elif wait_for_completion:
       self.log.debug("Waiting for import to complete...")
 
@@ -379,9 +518,20 @@ class TraderVue:
         self.log.error("Unsupported import status '%s'" % (data['status']))
         return None
     else:
-      return None
+      return True
 
   def get_users(self):
+    """Get the list of users for the organization.
+
+       .. note::
+
+          This method is only available to organization managers.
+
+       The dict objects in the list returned from this method contains keys as defined in the `TraderVue User Documentation <https://github.com/tradervue/api-docs/blob/master/users.md>`_.
+
+       :return: a list of users in the organization or ``None`` on error
+       :rtype: list or None
+    """
     url = '/'.join([self.baseurl, 'users'])
 
     r = self.__get(url, None)
@@ -398,6 +548,17 @@ class TraderVue:
       return None
 
   def get_user(self, user_id):
+    """Get detailed information about the specified user ID.
+
+       .. note::
+
+          This method is only available to organization managers.
+
+       The dict returned from this method contains keys as defined in the `TraderVue User Documentation <https://github.com/tradervue/api-docs/blob/master/users.md>`_.
+
+       :return: information on the specified user ID or ``None`` if an error occurs
+       :rtype: list or None
+    """
     user_id = str(user_id)
     url = '/'.join([self.baseurl, 'users'])
 
@@ -410,7 +571,25 @@ class TraderVue:
       self.__handle_bad_http_response(r, "Unable to query user ID %s" % (user_id), show_url = True)
       return None
 
-  def update_user(self, user_id, plan = None):
+  def update_user(self, user_id, username = None, email = None, plan = None):
+    """Update fields for the specified user ID.
+
+       .. note::
+
+          This method is only available to organization managers.
+
+       All arguments (other than ``user_id``) to this method are optional. If not specified, that particular field won't be modified.
+
+       :param str user_id: the user ID to update
+       :param username: the username for the specified user ID
+       :param email: the email for the specified user ID
+       :param plan: the TraderVue plan level. Should be one of ``'Free'``, ``'Silver'``, or ``'Gold'``.
+       :type username: str or None
+       :type email: str or None
+       :type plan: str or None
+       :return: ``True`` if the user ID was successfully updated, ``False`` otherwise
+       :rtype: bool
+    """
     user_id = str(user_id)
     url = '/'.join([self.baseurl, 'users'])
 
@@ -422,7 +601,22 @@ class TraderVue:
       self.__handle_bad_http_response(r, "Unable to update fields [%s] of user ID" % (' '.join(data.keys()), user_id))
       return False
 
-  def create_user(self, username, plan, email, password, trial_end = None):
+  def create_user(self, username, email, plan, password, trial_end = None):
+    """Create a new user.
+
+       .. note::
+
+          This method is only available to organization managers.
+
+       :param str username: the username for the new user
+       :param str email: the email for the new user
+       :param str plan: the TraderVue plan level for the new user. Should be one of ``'Free'``, ``'Silver'``, or ``'Gold'``.
+       :param str password: the password for the new user
+       :param trial_end: If specified, set a date for when the new user's trial period ends
+       :type trial_end: datetime or None
+       :return: the newly created user ID if successful or ``None`` if an error occurs
+       :rtype: str or None
+    """
     url = '/'.join([self.baseurl, 'users'])
 
     data = { 'username': username, 'plan': plan, 'email': email, 'password': password }
