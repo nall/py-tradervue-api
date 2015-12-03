@@ -129,6 +129,17 @@
   <div class="section" id="python-tradervue-api">
 <h1>Python TraderVue API<a class="headerlink" href="#python-tradervue-api" title="Permalink to this headline">¶</a></h1>
 <p>This is a Python implementation of the <a class="reference external" href="https://www.tradervue.com">TraderVue</a> API.</p>
+<dl class="docutils">
+<dt>Here&#8217;s a small example usage: ::</dt>
+<dd><p class="first">import datetime
+import tradervue
+tv = tradervue.TraderVue(username, password, user_agent)
+trades = tv.get_trades(symbol = &#8216;OEX&#8217;, startdate = datetime.date(2015, 9, 1))
+for t in trades:</p>
+<blockquote class="last">
+<div>print &#8220;Trade %s Profit/Loss: $%s&#8221; % (t[&#8216;id&#8217;], t[&#8216;gross_pl&#8217;])</div></blockquote>
+</dd>
+</dl>
 <dl class="class">
 <dt id="tradervue.TraderVue">
 <em class="property">class </em><code class="descclassname">tradervue.</code><code class="descname">TraderVue</code><span class="sig-paren">(</span><em>username</em>, <em>password</em>, <em>user_agent</em>, <em>target_user=None</em>, <em>baseurl='https://www.tradervue.com'</em>, <em>verbose_http=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.TraderVue" title="Permalink to this definition">¶</a></dt>
