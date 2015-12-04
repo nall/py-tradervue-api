@@ -15,13 +15,13 @@ def setup_logging():
   LOG = logging.getLogger()
   LOG.setLevel(logging.DEBUG)
   console = logging.StreamHandler()
-  console.setFormatter(tradervue.TraderVueLogFormatter())
+  console.setFormatter(tradervue.TradervueLogFormatter())
   LOG.addHandler(console)
 
 def parse_cmdline_args():
-  parser = argparse.ArgumentParser(description='TraderVue Command Line Client')
-  parser.add_argument('--username', '-u', type = str, required = True, help = "TraderVue username")
-  parser.add_argument('--password', '-p', type = str, required = True, help = "TraderVue password")
+  parser = argparse.ArgumentParser(description='Tradervue Command Line Client')
+  parser.add_argument('--username', '-u', type = str, required = True, help = "Tradervue username")
+  parser.add_argument('--password', '-p', type = str, required = True, help = "Tradervue password")
 
   parser.add_argument('--create', '-c', action='store_true', help = "Create a new trade")
   parser.add_argument('--symbol', type = str, help = "The symbol to use for created trades")
@@ -36,7 +36,7 @@ def main():
   setup_logging()
   args = parse_cmdline_args()
 
-  tv = tradervue.TraderVue(args.username, args.password, 'PyTraderVue (jon@nall.cc)')
+  tv = tradervue.Tradervue(args.username, args.password, 'PyTradervue (jon@nall.cc)')
   tid = tv.create_trade(args.symbol, args.notes, args.initial_risk, args.shared, args.tag)
   LOG.info("Created trade ID %s" % (tid))
 

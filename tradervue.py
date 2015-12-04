@@ -3,7 +3,7 @@
 """
 .. module:: tradervue
    :platform: Unix, Windows
-   :synopsis: Implements the TraderVue API
+   :synopsis: Implements the Tradervue API
 
 .. moduleauthor:: Jon Nall <jon.nall@gmail.com>
 
@@ -22,7 +22,7 @@ from colorama import Fore, Back, Style
 
 # Print logging messages with a nice severity and some color
 #
-class TraderVueLogFormatter(logging.Formatter):
+class TradervueLogFormatter(logging.Formatter):
   def format(self, record):
     prefix = suffix = severity = ''
     if record.levelno >= logging.ERROR:
@@ -42,22 +42,22 @@ class TraderVueLogFormatter(logging.Formatter):
 
     return '%s-%s- %-15s %s%s' % (prefix, severity, self.formatTime(record, datefmt = None), record.msg, suffix)
 
-class TraderVue:
+class Tradervue:
   """Here's some class stuff more
   """
 
   def __init__(self, username, password, user_agent, target_user = None, baseurl = 'https://www.tradervue.com', verbose_http = False):
-    """Construct a TraderVue instance.
+    """Construct a Tradervue instance.
 
-       :param str username: the TraderVue username
-       :param str password: the TraderVue password
+       :param str username: the Tradervue username
+       :param str password: the Tradervue password
        :param str user_agent: the user agent to use in requests. Should be something like: ``MyApp (your@email.com)``
        :param target_user: the user id to issues requests on behalf of. To be used by organization administrators (if the feature is enabled)
        :param str baseurl: the organization's URL if using a local server
        :param bool verbose_http: set to True for verbose dumping of HTTP requests and reponses (requires logging of DEBUG severity to be enabled)
        :type target_user: str or None
-       :return: the TraderVue instance
-       :rtype: TraderVue
+       :return: the Tradervue instance
+       :rtype: Tradervue
     """
     self.username = username
     self.password = password
@@ -136,7 +136,7 @@ class TraderVue:
        :param str symbol: The symbol for the trade
        :param notes: Any notes for the trade. Can include `Markdown <https://daringfireball.net/projects/markdown/>`_ syntax.
        :param initial_risk: The initial risk for the trade
-       :param bool shared: True if this trade should be shared with other TraderVue users
+       :param bool shared: True if this trade should be shared with other Tradervue users
        :param list tags: A list of tags to be applied to this trade. Each tag should be a string.
        :param bool return_url: If set to ``True``, the return value will be the value of the ``Location`` header. If ``False`` the trade ID is returned.
        :type notes: str or None
@@ -205,7 +205,7 @@ class TraderVue:
 
        All arguments to this method are optional. If not specified, they are not part of the query. 
 
-       The list returned from this method contains dict objects which have fields as defined in the `TraderVue Trade Documentation <https://github.com/tradervue/api-docs/blob/master/trades.md>`_.
+       The list returned from this method contains dict objects which have fields as defined in the `Tradervue Trade Documentation <https://github.com/tradervue/api-docs/blob/master/trades.md>`_.
 
        :param symbol: Find trades on this symbol
        :param tag_expr: Find trades matching this tag expression. Read more about tag expressions in this `blog entry <http://blog.tradervue.com/2012/10/10/new-tag-combination-report/>`_.
@@ -295,7 +295,7 @@ class TraderVue:
   def get_trade(self, trade_id):
     """Get detailed information about the specified trade ID.
 
-       The dict returned from this method contains keys as defined in the `TraderVue Trade Documentation <https://github.com/tradervue/api-docs/blob/master/trades.md>`_.
+       The dict returned from this method contains keys as defined in the `Tradervue Trade Documentation <https://github.com/tradervue/api-docs/blob/master/trades.md>`_.
 
        :param str trade_id: The trade ID to query.
        :return: a dict containing information about the trade ID or ``None`` on error.
@@ -315,7 +315,7 @@ class TraderVue:
   def get_trade_executions(self, trade_id):
     """Get detailed information about the executions of the specified trade ID.
 
-       The dict returned from this method contains keys as defined in the `TraderVue Trade Documentation <https://github.com/tradervue/api-docs/blob/master/trades.md>`_.
+       The dict returned from this method contains keys as defined in the `Tradervue Trade Documentation <https://github.com/tradervue/api-docs/blob/master/trades.md>`_.
 
        :param str trade_id: The trade ID to query.
        :return: a dict containing information about the executions for trade ID or ``None`` on error.
@@ -340,7 +340,7 @@ class TraderVue:
   def get_trade_comments(self, trade_id):
     """Get detailed information about the comments of the specified trade ID.
 
-       The dict returned from this method contains keys as defined in the `TraderVue Trade Documentation <https://github.com/tradervue/api-docs/blob/master/trades.md>`_.
+       The dict returned from this method contains keys as defined in the `Tradervue Trade Documentation <https://github.com/tradervue/api-docs/blob/master/trades.md>`_.
 
        :param str trade_id: The trade ID to query.
        :return: a dict containing information about the comments for trade ID or ``None`` on error.
@@ -369,7 +369,7 @@ class TraderVue:
 
        :param str trade_id: The trade ID to update.
        :param notes: Any notes for the trade. Can include `Markdown <https://daringfireball.net/projects/markdown/>`_ syntax.
-       :param shared: True if this trade should be shared with other TraderVue users
+       :param shared: True if this trade should be shared with other Tradervue users
        :param initial_risk: The initial risk for the trade
        :param list tags: A list of tags to be applied to this trade. Each tag should be a string.
        :type notes: str or None
@@ -403,7 +403,7 @@ class TraderVue:
   def import_status(self):
     """Query status of the current import.
 
-       The dict returned from this method contains keys as defined in the `TraderVue Import Documentation <https://github.com/tradervue/api-docs/blob/master/imports.md>`_.
+       The dict returned from this method contains keys as defined in the `Tradervue Import Documentation <https://github.com/tradervue/api-docs/blob/master/imports.md>`_.
 
        :return: a dict of the current import state or ``None`` on error
        :rtype: dict or None
@@ -426,13 +426,13 @@ class TraderVue:
   def import_executions(self, executions, account_tag = None, tags = None, allow_duplicates = False, overlay_commissions = False, import_retries = 3, wait_for_completion = False, wait_retries = 3, secs_per_wait_retry = 15):
     """Import the specified trade executions.
 
-       :param list executions: The executions to import. This should be a list of dicts. Each dict should have keys as specified in the `TraderVue Import Documentation <https://github.com/tradervue/api-docs/blob/master/imports.md>`_.
+       :param list executions: The executions to import. This should be a list of dicts. Each dict should have keys as specified in the `Tradervue Import Documentation <https://github.com/tradervue/api-docs/blob/master/imports.md>`_.
        :param account_tag: An account tag to use when importing. If ``None``, no account tag is used.
        :param tags: A list of tags to be applied to this trade. The list values should be strings. IF ``None``, no tags are applied to the trade.
        :param bool allow_duplicates: set this to ``True`` if you wish to disable Tradervue's automatic duplicate-detection when importing this data.
        :param bool overlay_commissions: set this to ``True`` to run this import in commission-overlay mode; no new trades will be created, and existing trades will be updated with commission and fee data. See the Tradervue `help article <http://www.tradervue.com/help/older_commissions>`_ for more details.
-       :param int import_retries: TraderVue allows only one import at a time. If this method is invoked while TraderVue is busy, the import will be retried up to this many times before returning ``None``.
-       :param bool wait_for_completion: If ``True``, this method will block until the import has been processed by TraderVue. In this case, the import success/failure information will be the return value from this method. Details on that data structure are available in the `TraderVue Import Documentation <https://github.com/tradervue/api-docs/blob/master/imports.md>`_.
+       :param int import_retries: Tradervue allows only one import at a time. If this method is invoked while Tradervue is busy, the import will be retried up to this many times before returning ``None``.
+       :param bool wait_for_completion: If ``True``, this method will block until the import has been processed by Tradervue. In this case, the import success/failure information will be the return value from this method. Details on that data structure are available in the `Tradervue Import Documentation <https://github.com/tradervue/api-docs/blob/master/imports.md>`_.
        :param int wait_retries: The number of times to poll the import status before giving up and returning ``None``.
        :param int secs_per_wait_retry: The poll interval in seconds to query import status.
        :type account_tag: str or None
@@ -527,7 +527,7 @@ class TraderVue:
 
           This method is only available to organization managers.
 
-       The dict objects in the list returned from this method contains keys as defined in the `TraderVue User Documentation <https://github.com/tradervue/api-docs/blob/master/users.md>`_.
+       The dict objects in the list returned from this method contains keys as defined in the `Tradervue User Documentation <https://github.com/tradervue/api-docs/blob/master/users.md>`_.
 
        :return: a list of users in the organization or ``None`` on error
        :rtype: list or None
@@ -554,7 +554,7 @@ class TraderVue:
 
           This method is only available to organization managers.
 
-       The dict returned from this method contains keys as defined in the `TraderVue User Documentation <https://github.com/tradervue/api-docs/blob/master/users.md>`_.
+       The dict returned from this method contains keys as defined in the `Tradervue User Documentation <https://github.com/tradervue/api-docs/blob/master/users.md>`_.
 
        :return: information on the specified user ID or ``None`` if an error occurs
        :rtype: list or None
@@ -583,7 +583,7 @@ class TraderVue:
        :param str user_id: the user ID to update
        :param username: the username for the specified user ID
        :param email: the email for the specified user ID
-       :param plan: the TraderVue plan level. Should be one of ``'Free'``, ``'Silver'``, or ``'Gold'``.
+       :param plan: the Tradervue plan level. Should be one of ``'Free'``, ``'Silver'``, or ``'Gold'``.
        :type username: str or None
        :type email: str or None
        :type plan: str or None
@@ -610,7 +610,7 @@ class TraderVue:
 
        :param str username: the username for the new user
        :param str email: the email for the new user
-       :param str plan: the TraderVue plan level for the new user. Should be one of ``'Free'``, ``'Silver'``, or ``'Gold'``.
+       :param str plan: the Tradervue plan level for the new user. Should be one of ``'Free'``, ``'Silver'``, or ``'Gold'``.
        :param str password: the password for the new user
        :param trial_end: If specified, set a date for when the new user's trial period ends
        :type trial_end: datetime or None
