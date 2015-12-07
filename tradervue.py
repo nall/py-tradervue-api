@@ -456,7 +456,6 @@ class Tradervue:
     if account_tag is not None:
       data['account_tag'] = account_tag
       if tags is None: tags = []
-      if account_tag not in tags: tags.append(account_tag)
 
     if tags is not None: data['tags'] = copy.deepcopy(tags)
 
