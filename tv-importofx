@@ -1,0 +1,264 @@
+#!/usr/bin/env python
+# vim: filetype=python shiftwidth=2 tabstop=2 expandtab
+
+import argparse
+import calendar
+import ConfigParser
+import datetime
+import getpass
+import keyring
+import logging
+import ofxclient
+import ofxclient.config
+import ofxparse
+import os
+import pprint
+import pytz
+import re
+import sys
+import tempfile
+import tradervue
+
+from colorama import Fore, Back, Style
+
+LOG = None
+
+TRADERVUE_KEYRING_NAME = 'tv-importofx'
+TRADERVUE_USERAGENT = 'tv-importofx (jon.nall@gmail.com)'
+
+# Regex to parse option format SYMXXXYYMMDD[CP]DDDDDFFF
+OPTION_REGEX = re.compile(r'^([A-Z]{1,6})([\^]{0,5})(\d{2})(\d{2})(\d{2})([CP])(\d{5})(\d{3})$')
+
+GMT = pytz.timezone('GMT')
+EASTERN = pytz.timezone('US/Eastern')
+
+class ErrorCountingHandler(logging.NullHandler):
+  ERROR_COUNT = 0
+  def handle(self, record):
+    if record.levelno >= logging.ERROR:
+      ErrorCountingHandler.ERROR_COUNT += 1
+
+  @staticmethod
+  def error_count():
+    return ErrorCountingHandler.ERROR_COUNT
+
+def setup_logging(debug = False):
+  global LOG
+  LOG = logging.getLogger()
+  LOG.setLevel(logging.DEBUG if debug else logging.INFO)
+  console = logging.StreamHandler()
+  console.setFormatter(tradervue.TradervueLogFormatter())
+  LOG.addHandler(console)
+  LOG.addHandler(ErrorCountingHandler())
+
+  # Turn off stupid INFO messages from requests lib
+  if not debug:
+    logging.getLogger('urllib3').setLevel(logging.WARNING)
+
+
+def parse_cmdline_args():
+  parser = argparse.ArgumentParser(description='Tradervue OFX Importer')
+  parser.add_argument('action', type = str, choices = ['set_password', 'delete_password', 'import'], help = 'The action to perform')
+  parser.add_argument('--account', '-a', type = str, help = 'Use the specified ofxclient account ID (the local_id field from ofxclient.ini). Required for imports.')
+  parser.add_argument('--username', '-u', type = str, default = os.environ['USER'], help = 'Tradervue username if different from $USER (default: %(default)s)')
+  parser.add_argument('--days', type = int, default = 1, help = 'The number of days of OFX data to download (default: %(default)s)')
+  parser.add_argument('--tag', dest = 'tags', type = str, action = 'append', help = 'Add the specified tag to the imported executions. May be specified multiple times.')
+  parser.add_argument('--account_tag', type = str, help = 'Use the specified tag as the account tag during import. This tag is automatically added to the trade as well')
+  parser.add_argument('--allow_duplicates', action = 'store_true', help = 'disable Tradervue\'s automatic duplicate-detection when importing this data')
+  parser.add_argument('--overlay_commissions', action = 'store_true', help = 'No new trades will be created and existing trades will be updated with commission and fee data')
+  parser.add_argument('--debug', action = 'store_true', help = 'Enable verbose debugging messages')
+  parser.add_argument('--debug_http', action = 'store_true', help = 'Enable verbose HTTP request/response debugging messages')
+
+  args = parser.parse_args()
+
+  if args.action == 'import' and args.account is None:
+    parser.error("--account is a required argument for the import action")
+
+  if args.debug_http:
+    args.debug = True
+  return args
+
+def delete_password(username):
+  LOG.info("Deleting keyring password for %s." % (username))
+  try:
+    keyring.delete_password(TRADERVUE_KEYRING_NAME, username)
+  except keyring.errors.PasswordDeleteError as e:
+    LOG.error("Unable to delete password for Tradervue username '%s': %s" % (username, e))
+    return False
+  return True
+
+def set_password(username):
+  LOG.info("Adding password for %s to keyring." % (username))
+  p = getpass.getpass('Tradervue password: ')
+
+  try:
+    keyring.set_password(TRADERVUE_KEYRING_NAME, username, p)
+  except keyring.errors.PasswordSetError as e:
+    LOG.error("Unable to set password for Tradervue username '%s': %s'" % (username, e))
+    return False
+  return True
+
+def get_credentials(args):
+  username = args.username
+  password = keyring.get_password(TRADERVUE_KEYRING_NAME, username)
+  if password == None:
+    LOG.error("No password found for Tradervue username '%s'. Rerun with set_password to set a password. See --help for help")
+    return None
+
+  return (username, password) 
+
+def main():
+  args = parse_cmdline_args()
+  setup_logging(args.debug)
+
+  if args.action == 'delete_password':
+    return 0 if delete_password(args.username) else False
+  elif args.action == 'set_password':
+    return 0 if set_password(args.username) else False
+
+  # The rest of this assumes import
+  assert args.action == 'import', "Invalid action '%s' specified" % (args.action)
+  credentials = get_credentials(args)
+  if credentials is None:
+    LOG.error("Unable to determine Tradervue credentials. Exiting.")
+    return 1
+
+  config = ofxclient.config.OfxConfig()
+  acct = config.account(args.account)
+  LOG.info("Downloading OFX for %s from %s..." % (acct.number_masked(), acct.institution.description)) 
+  download = acct.download(days = args.days)
+  ofxtext = download.read()
+
+  LOG.info("Processing OFX data into Tradervue executions")
+  ofx = None
+  with tempfile.NamedTemporaryFile() as fh:
+    fh.write(ofxtext)
+    fh.flush()
+    os.fsync(fh)
+    ofx = ofxparse.OfxParser.parse(file(fh.name))
+    fh.close()
+
+  executions = []
+  for t in ofx.account.statement.transactions:
+    if t.type == ofxparse.ofxparse.InvestmentTransaction.Income:
+      # These aren't the transactions you're looking for...
+      continue
+
+    executions.append(execution_for_transaction(t, ofx.security_list, ofx.account.institution))
+
+    s = _info_for_security(t.security, ofx.security_list)
+    LOG.debug("%s %s %s (%s) %d @ $%.2f (%d, %s, %s, %s)" % (t.tradeDate, t.type, s.ticker, s.name, t.units, t.unit_price, t.shares_per_contract, t.opt_action, t.opt_buy_type, t.opt_sell_type))
+
+  if len(executions) == 0:
+    daystring = 'day' if args.days == 1 else 'days'
+    LOG.info("No executions generated from %d %s of OFX transactions" % (args.days, daystring))
+    return 0
+
+  LOG.info("Importing %d executions into Tradervue" % (len(executions)))
+
+  tv = tradervue.Tradervue(credentials[0], credentials[1], TRADERVUE_USERAGENT, verbose_http = args.debug_http)
+  result = tv.import_executions(executions, args.account_tag, args.tags, allow_duplicates = args.allow_duplicates, overlay_commissions = args.overlay_commissions, wait_for_completion = True)
+  if result is None:
+    LOG.error("Error occurred while importing transactions")
+  elif result['status'] == 'succeeded':
+    info = []
+    if result['info']['duplicate_count'] > 0:
+      info.append('%s%d duplicates%s' % (Fore.YELLOW, result['info']['duplicate_count'], Fore.RESET))
+    if result['info']['overquota_count'] > 0:
+      info.append('%s%d over quota%s' % (Fore.YELLOW, result['info']['overquota_count'], Fore.RESET))
+    if result['info']['skipped_futures']:
+      info.append('%sskipped futures%s' % (Fore.YELLOW, Fore.RESET))
+    if result['info']['skipped_options']:
+      info.append('%sskipped options%s' % (Fore.YELLOW, Fore.RESET))
+    if result['info']['skipped_forex']:
+      info.append('%sskipped forex%s' % (Fore.YELLOW, Fore.RESET))
+
+    infostring = ''
+    if len(info) > 0:
+      infostring = ' (%s)' % (', '.join(info))
+
+    LOG.info("Successfully imported %d executions%s" % (result['info']['exec_count'], infostring))
+  elif result['status'] == 'failed':
+    unimported_count = len(executions) - result['info']['exec_count']
+    errmsg = result['info']['error_description']
+    bad_execution = executions[result['info']['error_execnumber'] - 1]
+    LOG.error("Failed to import %d of %d executions. First failure: %s. Failing execution: %s" % (unimported_count, len(executions), errmsg, bad_execution))
+  else:
+    LOG.error("Unexpected status '%s' from import" % (result['status']))
+
+def _info_for_security(uniqueid, security_list):
+  for e in security_list:
+    if e.uniqueid == uniqueid:
+      return e
+  assert False, "Unable to find symbol %s in security list: %s" % (uniqueid, security_list)
+  return None
+
+def _parse_option_ticker(symbol):
+  m = OPTION_REGEX.match(symbol)
+  assert m, "Unable to parse option symbol '%s'" % (symbol)
+  (usym, junk, year, month, day, callput, strike_whole, strike_fraction) = m.groups()
+
+  return { 'ticker': symbol, 
+       'underlying': usym,
+            'month': int(month),
+              'day': int(day), 
+             'year': int(year), 
+            'otype': callput, 
+           'strike': int(strike_whole) + (int(strike_fraction) / 1000.0) }
+  
+def _fix_tradedate_generic(dt):
+  return GMT.localize(dt)
+
+def _fix_tradedate_for_ox(dt):
+  return EASTERN.localize(dt)
+
+def _fix_tradedate_if_needed(dt, institution):
+
+  # Map of ORG/FID combos to date fixing functions
+  date_fixers = { ('10876', '10876'): _fix_tradedate_for_ox }
+  
+  fn = _fix_tradedate_generic
+  orgfid = (institution.organization, institution.fid)
+  if orgfid in date_fixers:
+    fn = date_fixers[orgfid]
+
+  dt = GMT.normalize(fn(dt))
+
+  return dt.isoformat()
+
+def _convert_to_tv_ticker(ticker):
+  symbol_map = { 'NDX': '$IUXX',
+                 'SPX': '$SPX',
+                 'VIX': '$VIX',
+                 'RUT': '$IUX' }
+  if ticker in symbol_map:
+    return symbol_map[ticker]
+
+  return ticker
+
+def execution_for_transaction(t, security_list, institution):
+  security = _info_for_security(t.security, security_list)
+
+  execution = {'symbol'    : _convert_to_tv_ticker(security.ticker),
+               'datetime'  : _fix_tradedate_if_needed(t.tradeDate, institution),
+               'transfee'  : float(t.fees),
+               'ecnfees'   : 0.00, # FIXME: Is this correct?
+               'commission': float(t.commission),
+               'price'     : float(t.unit_price),
+               'quantity'  : float(t.units),
+               'option'    : ''}
+
+  # For options, use the underlying as the symbol and populate the option field
+  if t.type == ofxparse.ofxparse.InvestmentTransaction.BuyOpt or t.type == ofxparse.ofxparse.InvestmentTransaction.SellOpt:
+    o_info = _parse_option_ticker(security.ticker)
+    execution['symbol'] = _convert_to_tv_ticker(o_info['underlying'])
+    execution['option'] = "%s%02d %02d %d %s" % (calendar.month_abbr[int(o_info['month'])].upper(), o_info['day'], o_info['year'], o_info['strike'], 'CALL' if o_info['otype'] == 'C' else 'PUT')
+
+  return execution
+
+if __name__ == "__main__":
+  rc = main()
+  if rc == 0 or not isinstance(rc, int):
+    if ErrorCountingHandler.error_count() > 0:
+      rc = 1
+  sys.exit(rc)
