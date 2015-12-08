@@ -6,9 +6,10 @@ This repository contains a Python implementation of the Tradervue API and small 
    * User management
    * Journal entry management
 
-This API is documented [here](http://nall.github.io/py-tradervue/py-tradervue.html).
+## Documentation
 
-The Tradervue REST API is documented [here](https://github.com/tradervue/api-docs). 
+   * [Python Tradervue API](http://nall.github.io/py-tradervue/py-tradervue.html)
+   * [Tradervue REST API](https://github.com/tradervue/api-docs)
 
 ## Example usage
 
