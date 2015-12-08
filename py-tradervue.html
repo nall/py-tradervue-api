@@ -56,16 +56,16 @@
 </ul>
 <p>Below is a small example usage:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">datetime</span>
-<span class="kn">import</span> <span class="nn">tradervue</span>
-<span class="n">tv</span> <span class="o">=</span> <span class="n">tradervue</span><span class="o">.</span><span class="n">Tradervue</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">user_agent</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">tradervue</span> <span class="kn">import</span> <span class="n">Tradervue</span>
+<span class="n">tv</span> <span class="o">=</span> <span class="n">Tradervue</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">user_agent</span><span class="p">)</span>
 <span class="n">trades</span> <span class="o">=</span> <span class="n">tv</span><span class="o">.</span><span class="n">get_trades</span><span class="p">(</span><span class="n">symbol</span> <span class="o">=</span> <span class="s">&#39;OEX&#39;</span><span class="p">,</span> <span class="n">startdate</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">(</span><span class="mi">2015</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
 <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">trades</span><span class="p">:</span>
   <span class="k">print</span> <span class="s">&quot;Trade </span><span class="si">%s</span><span class="s"> Profit/Loss: $</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="s">&#39;gross_pl&#39;</span><span class="p">])</span>
 </pre></div>
 </div>
 <dl class="class">
-<dt id="tradervue.Tradervue">
-<em class="property">class </em><code class="descclassname">tradervue.</code><code class="descname">Tradervue</code><span class="sig-paren">(</span><em>username</em>, <em>password</em>, <em>user_agent</em>, <em>target_user=None</em>, <em>baseurl='https://www.tradervue.com'</em>, <em>verbose_http=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.Tradervue" title="Permalink to this definition">¶</a></dt>
+<dt id="tradervue.tradervue.Tradervue">
+<em class="property">class </em><code class="descclassname">tradervue.tradervue.</code><code class="descname">Tradervue</code><span class="sig-paren">(</span><em>username</em>, <em>password</em>, <em>user_agent</em>, <em>target_user=None</em>, <em>baseurl='https://www.tradervue.com'</em>, <em>verbose_http=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue" title="Permalink to this definition">¶</a></dt>
 <dd><p>Here&#8217;s some class stuff more</p>
 <p>Construct a Tradervue instance.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -85,14 +85,14 @@
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the Tradervue instance</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#tradervue.Tradervue" title="tradervue.Tradervue">Tradervue</a></p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#tradervue.tradervue.Tradervue" title="tradervue.tradervue.Tradervue">Tradervue</a></p>
 </td>
 </tr>
 </tbody>
 </table>
 <dl class="method">
-<dt id="tradervue.Tradervue.create_journal">
-<code class="descname">create_journal</code><span class="sig-paren">(</span><em>date</em>, <em>notes=None</em>, <em>return_url=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.Tradervue.create_journal" title="Permalink to this definition">¶</a></dt>
+<dt id="tradervue.tradervue.Tradervue.create_journal">
+<code class="descname">create_journal</code><span class="sig-paren">(</span><em>date</em>, <em>notes=None</em>, <em>return_url=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.create_journal" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a new journal entry. This is the equivalent of the &#8216;Create New Journal Entry&#8217; feature on the website.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -116,8 +116,8 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="tradervue.Tradervue.create_trade">
-<code class="descname">create_trade</code><span class="sig-paren">(</span><em>symbol</em>, <em>notes=None</em>, <em>initial_risk=None</em>, <em>shared=False</em>, <em>tags=[]</em>, <em>return_url=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.Tradervue.create_trade" title="Permalink to this definition">¶</a></dt>
+<dt id="tradervue.tradervue.Tradervue.create_trade">
+<code class="descname">create_trade</code><span class="sig-paren">(</span><em>symbol</em>, <em>notes=None</em>, <em>initial_risk=None</em>, <em>shared=False</em>, <em>tags=[]</em>, <em>return_url=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.create_trade" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a new trade. This is the equivalent of the &#8216;New Trade&#8217; feature on the website.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -145,8 +145,8 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="tradervue.Tradervue.create_user">
-<code class="descname">create_user</code><span class="sig-paren">(</span><em>username</em>, <em>email</em>, <em>plan</em>, <em>password</em>, <em>trial_end=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.Tradervue.create_user" title="Permalink to this definition">¶</a></dt>
+<dt id="tradervue.tradervue.Tradervue.create_user">
+<code class="descname">create_user</code><span class="sig-paren">(</span><em>username</em>, <em>email</em>, <em>plan</em>, <em>password</em>, <em>trial_end=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.create_user" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a new user.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -176,8 +176,8 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="tradervue.Tradervue.delete_journal">
-<code class="descname">delete_journal</code><span class="sig-paren">(</span><em>journal_id</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.Tradervue.delete_journal" title="Permalink to this definition">¶</a></dt>
+<dt id="tradervue.tradervue.Tradervue.delete_journal">
+<code class="descname">delete_journal</code><span class="sig-paren">(</span><em>journal_id</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.delete_journal" title="Permalink to this definition">¶</a></dt>
 <dd><p>Delete the specified journal ID.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -194,8 +194,8 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="tradervue.Tradervue.delete_journals">
-<code class="descname">delete_journals</code><span class="sig-paren">(</span><em>*journal_ids</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.Tradervue.delete_journals" title="Permalink to this definition">¶</a></dt>
+<dt id="tradervue.tradervue.Tradervue.delete_journals">
+<code class="descname">delete_journals</code><span class="sig-paren">(</span><em>*journal_ids</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.delete_journals" title="Permalink to this definition">¶</a></dt>
 <dd><p>Delete the specified journal IDs.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -212,8 +212,8 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="tradervue.Tradervue.delete_trade">
-<code class="descname">delete_trade</code><span class="sig-paren">(</span><em>trade_id</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.Tradervue.delete_trade" title="Permalink to this definition">¶</a></dt>
+<dt id="tradervue.tradervue.Tradervue.delete_trade">
+<code class="descname">delete_trade</code><span class="sig-paren">(</span><em>trade_id</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.delete_trade" title="Permalink to this definition">¶</a></dt>
 <dd><p>Delete the specified trade ID.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -230,8 +230,8 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="tradervue.Tradervue.delete_trades">
-<code class="descname">delete_trades</code><span class="sig-paren">(</span><em>*trade_ids</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.Tradervue.delete_trades" title="Permalink to this definition">¶</a></dt>
+<dt id="tradervue.tradervue.Tradervue.delete_trades">
+<code class="descname">delete_trades</code><span class="sig-paren">(</span><em>*trade_ids</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.delete_trades" title="Permalink to this definition">¶</a></dt>
 <dd><p>Delete the specified trade IDs.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -248,8 +248,8 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="tradervue.Tradervue.get_journal">
-<code class="descname">get_journal</code><span class="sig-paren">(</span><em>journal_id</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.Tradervue.get_journal" title="Permalink to this definition">¶</a></dt>
+<dt id="tradervue.tradervue.Tradervue.get_journal">
+<code class="descname">get_journal</code><span class="sig-paren">(</span><em>journal_id</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.get_journal" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get detailed information about the specified journal ID.</p>
 <p>The dict returned from this method contains keys as defined in the <a class="reference external" href="https://github.com/tradervue/api-docs/blob/master/journal.md">Tradervue Journal Documentation</a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -267,8 +267,8 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="tradervue.Tradervue.get_journals">
-<code class="descname">get_journals</code><span class="sig-paren">(</span><em>date=None</em>, <em>startdate=None</em>, <em>enddate=None</em>, <em>max_entries=25</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.Tradervue.get_journals" title="Permalink to this definition">¶</a></dt>
+<dt id="tradervue.tradervue.Tradervue.get_journals">
+<code class="descname">get_journals</code><span class="sig-paren">(</span><em>date=None</em>, <em>startdate=None</em>, <em>enddate=None</em>, <em>max_entries=25</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.get_journals" title="Permalink to this definition">¶</a></dt>
 <dd><p>Query for journal entries matching the specified criteria.</p>
 <p>All arguments to this method are optional. If not specified, they are not part of the query.</p>
 <p>The list returned from this method contains dict objects which have fields as defined in the <a class="reference external" href="https://github.com/tradervue/api-docs/blob/master/journal.md">Tradervue Journal Documentation</a>.</p>
@@ -295,8 +295,8 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="tradervue.Tradervue.get_trade">
-<code class="descname">get_trade</code><span class="sig-paren">(</span><em>trade_id</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.Tradervue.get_trade" title="Permalink to this definition">¶</a></dt>
+<dt id="tradervue.tradervue.Tradervue.get_trade">
+<code class="descname">get_trade</code><span class="sig-paren">(</span><em>trade_id</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.get_trade" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get detailed information about the specified trade ID.</p>
 <p>The dict returned from this method contains keys as defined in the <a class="reference external" href="https://github.com/tradervue/api-docs/blob/master/trades.md">Tradervue Trade Documentation</a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -314,8 +314,8 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="tradervue.Tradervue.get_trade_comments">
-<code class="descname">get_trade_comments</code><span class="sig-paren">(</span><em>trade_id</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.Tradervue.get_trade_comments" title="Permalink to this definition">¶</a></dt>
+<dt id="tradervue.tradervue.Tradervue.get_trade_comments">
+<code class="descname">get_trade_comments</code><span class="sig-paren">(</span><em>trade_id</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.get_trade_comments" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get detailed information about the comments of the specified trade ID.</p>
 <p>The dict returned from this method contains keys as defined in the <a class="reference external" href="https://github.com/tradervue/api-docs/blob/master/trades.md">Tradervue Trade Documentation</a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -333,8 +333,8 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="tradervue.Tradervue.get_trade_executions">
-<code class="descname">get_trade_executions</code><span class="sig-paren">(</span><em>trade_id</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.Tradervue.get_trade_executions" title="Permalink to this definition">¶</a></dt>
+<dt id="tradervue.tradervue.Tradervue.get_trade_executions">
+<code class="descname">get_trade_executions</code><span class="sig-paren">(</span><em>trade_id</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.get_trade_executions" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get detailed information about the executions of the specified trade ID.</p>
 <p>The dict returned from this method contains keys as defined in the <a class="reference external" href="https://github.com/tradervue/api-docs/blob/master/trades.md">Tradervue Trade Documentation</a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -352,8 +352,8 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="tradervue.Tradervue.get_trades">
-<code class="descname">get_trades</code><span class="sig-paren">(</span><em>symbol=None</em>, <em>tag_expr=None</em>, <em>side=None</em>, <em>duration=None</em>, <em>startdate=None</em>, <em>enddate=None</em>, <em>winners=None</em>, <em>max_trades=25</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.Tradervue.get_trades" title="Permalink to this definition">¶</a></dt>
+<dt id="tradervue.tradervue.Tradervue.get_trades">
+<code class="descname">get_trades</code><span class="sig-paren">(</span><em>symbol=None</em>, <em>tag_expr=None</em>, <em>side=None</em>, <em>duration=None</em>, <em>startdate=None</em>, <em>enddate=None</em>, <em>winners=None</em>, <em>max_trades=25</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.get_trades" title="Permalink to this definition">¶</a></dt>
 <dd><p>Query for trades matching the specified criteria.</p>
 <p>All arguments to this method are optional. If not specified, they are not part of the query.</p>
 <p>The list returned from this method contains dict objects which have fields as defined in the <a class="reference external" href="https://github.com/tradervue/api-docs/blob/master/trades.md">Tradervue Trade Documentation</a>.</p>
@@ -384,8 +384,8 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="tradervue.Tradervue.get_user">
-<code class="descname">get_user</code><span class="sig-paren">(</span><em>user_id</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.Tradervue.get_user" title="Permalink to this definition">¶</a></dt>
+<dt id="tradervue.tradervue.Tradervue.get_user">
+<code class="descname">get_user</code><span class="sig-paren">(</span><em>user_id</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.get_user" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get detailed information about the specified user ID.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -405,8 +405,8 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="tradervue.Tradervue.get_users">
-<code class="descname">get_users</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.Tradervue.get_users" title="Permalink to this definition">¶</a></dt>
+<dt id="tradervue.tradervue.Tradervue.get_users">
+<code class="descname">get_users</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.get_users" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the list of users for the organization.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -426,8 +426,8 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="tradervue.Tradervue.import_executions">
-<code class="descname">import_executions</code><span class="sig-paren">(</span><em>executions</em>, <em>account_tag=None</em>, <em>tags=None</em>, <em>allow_duplicates=False</em>, <em>overlay_commissions=False</em>, <em>import_retries=3</em>, <em>wait_for_completion=False</em>, <em>wait_retries=3</em>, <em>secs_per_wait_retry=15</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.Tradervue.import_executions" title="Permalink to this definition">¶</a></dt>
+<dt id="tradervue.tradervue.Tradervue.import_executions">
+<code class="descname">import_executions</code><span class="sig-paren">(</span><em>executions</em>, <em>account_tag=None</em>, <em>tags=None</em>, <em>allow_duplicates=False</em>, <em>overlay_commissions=False</em>, <em>import_retries=3</em>, <em>wait_for_completion=False</em>, <em>wait_retries=3</em>, <em>secs_per_wait_retry=15</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.import_executions" title="Permalink to this definition">¶</a></dt>
 <dd><p>Import the specified trade executions.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -464,8 +464,8 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="tradervue.Tradervue.import_status">
-<code class="descname">import_status</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.Tradervue.import_status" title="Permalink to this definition">¶</a></dt>
+<dt id="tradervue.tradervue.Tradervue.import_status">
+<code class="descname">import_status</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.import_status" title="Permalink to this definition">¶</a></dt>
 <dd><p>Query status of the current import.</p>
 <p>The dict returned from this method contains keys as defined in the <a class="reference external" href="https://github.com/tradervue/api-docs/blob/master/imports.md">Tradervue Import Documentation</a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -481,8 +481,8 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="tradervue.Tradervue.update_journal">
-<code class="descname">update_journal</code><span class="sig-paren">(</span><em>journal_id</em>, <em>notes=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.Tradervue.update_journal" title="Permalink to this definition">¶</a></dt>
+<dt id="tradervue.tradervue.Tradervue.update_journal">
+<code class="descname">update_journal</code><span class="sig-paren">(</span><em>journal_id</em>, <em>notes=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.update_journal" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update fields of the specified journal ID.</p>
 <p>All arguments (other than <code class="docutils literal"><span class="pre">journal_id</span></code>) to this method are optional. If not specified, that particular field won&#8217;t be modified.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -507,8 +507,8 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="tradervue.Tradervue.update_trade">
-<code class="descname">update_trade</code><span class="sig-paren">(</span><em>trade_id</em>, <em>notes=None</em>, <em>shared=None</em>, <em>initial_risk=None</em>, <em>tags=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.Tradervue.update_trade" title="Permalink to this definition">¶</a></dt>
+<dt id="tradervue.tradervue.Tradervue.update_trade">
+<code class="descname">update_trade</code><span class="sig-paren">(</span><em>trade_id</em>, <em>notes=None</em>, <em>shared=None</em>, <em>initial_risk=None</em>, <em>tags=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.update_trade" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update fields of the specified trade ID.</p>
 <p>All arguments (other than <code class="docutils literal"><span class="pre">trade_id</span></code>) to this method are optional. If not specified, that particular field won&#8217;t be modified.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -536,8 +536,8 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="tradervue.Tradervue.update_user">
-<code class="descname">update_user</code><span class="sig-paren">(</span><em>user_id</em>, <em>username=None</em>, <em>email=None</em>, <em>plan=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.Tradervue.update_user" title="Permalink to this definition">¶</a></dt>
+<dt id="tradervue.tradervue.Tradervue.update_user">
+<code class="descname">update_user</code><span class="sig-paren">(</span><em>user_id</em>, <em>username=None</em>, <em>email=None</em>, <em>plan=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.update_user" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update fields for the specified user ID.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
