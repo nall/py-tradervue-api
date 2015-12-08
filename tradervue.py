@@ -194,12 +194,11 @@ class Tradervue:
   def delete_trades(self, *trade_ids):
     """Delete the specified trade IDs.
 
-       :param str trade_ids: The trade IDs to be deleted.
+       :param list trade_ids: The trade IDs to be deleted.
        :return: A list of bool values (one per trade ID argument). ``True`` indicates the trade was deleted successfully. ``False`` indicates an error occured while deleting the trade ID.
        :rtype: list of bool
     """
     results = []
-    trade_id = str(trade_id)
 
     for trade_id in trade_ids:
       if not self.delete_trade(trade_id):
@@ -247,8 +246,8 @@ class Tradervue:
        :type tag_expr: str or None
        :type side: str or None
        :type duration: str or None
-       :type startdate: datetime or None
-       :type enddate: datetime or None
+       :type startdate: date or datetime or None
+       :type enddate: date or datetime or None
        :type winners: bool or None
        :type max_trades: int or None
        :return: a list of trades matching the specified critiera or ``None`` if an error is encountered
@@ -640,7 +639,7 @@ class Tradervue:
        :param str plan: the Tradervue plan level for the new user. Should be one of ``'Free'``, ``'Silver'``, or ``'Gold'``.
        :param str password: the password for the new user
        :param trial_end: If specified, set a date for when the new user's trial period ends
-       :type trial_end: datetime or None
+       :type trial_end: date or datetime or None
        :return: the newly created user ID if successful or ``None`` if an error occurs
        :rtype: str or None
     """
@@ -658,4 +657,183 @@ class Tradervue:
     else:
       self.__handle_bad_http_response(r, "New trade creation for %s" % (symbol))
       return None
+
+  def get_journals(self, date = None, startdate = None, enddate = None, max_entries = 25):
+    """Query for journal entries matching the specified criteria.
+
+       All arguments to this method are optional. If not specified, they are not part of the query. 
+
+       The list returned from this method contains dict objects which have fields as defined in the `Tradervue Journal Documentation <https://github.com/tradervue/api-docs/blob/master/journal.md>`_.
+
+       :param date: Find journal entry for the specified date. If this argument is used, neither ``startdate`` nor ``enddate`` should be specified.
+       :param startdate: Find journal entries occuring on or after the specified time. Do not use if ``date`` is specified.
+       :param enddate: Find journal entries occuring on or before the specified time. Do not use if ``date`` is specified.
+       :param max_entries: Return at most the specified number of journal entries
+       :type date: date or datetime or None
+       :type startdate: date or datetime or None
+       :type enddate: date or datetime or None
+       :type max_entries: int or None
+       :return: a list of journal entries matching the specified critiera or ``None`` if an error is encountered
+       :rtype: list or none
+    """
+    if date is not None and (startdate is not None or enddate is not None):
+      raise ValueError, "Cannot specify startdate or enddate if date is specified"
+
+    data = { }
+    if date is not None: data['d'] = date.strftime('%m/%d/%Y')
+    if startdate is not None: data['startdate'] = startdate.strftime('%m/%d/%Y')
+    if enddate is not None: data['enddate'] = enddate.strftime('%m/%d/%Y')
+
+    total_pages = 1
+    if max_entries > 100:
+      total_pages = int(math.ceil(max_entries / 100.0))
+
+    all_journals = []
+    for page in range(1, total_pages + 1):
+      entries_left = max_entries - len(all_journals)
+      data['page'] = page
+      data['count'] = 100 if entries_left >= 100 else entries_left
+      journals = self.__get_journals(data)
+      if journals is None:
+        self.log.debug("Found error condition when querying %s" % (data))
+        return None
+      elif len(journals) == 0:
+        self.log.debug("No journal entries were found when querying %s" % (data))
+        break
+      else:
+        entrystring = 'entry' if len(journals) == 1 else 'entries'
+        self.log.debug("%d journal %s were found when querying %s" % (len(journals), entrystring, data))
+        all_journals.extend(journals)
+
+    return all_journals
+
+  def __get_journals(self, data):
+    url = '/'.join([self.baseurl, 'journal'])
+    r = self.__get(url, data)
+    if r.status_code == 200:
+      self.log.debug("Successfully queried url %s" % (r.url))
+      result = json.loads(r.text)
+      if 'journal_entries' not in result:
+        self.log.error("No 'journal_entries' field in query result for URL: %s\n%s" % (r.url, r.text))
+        return None
+      return result['journal_entries']
+    else:
+      self.__handle_bad_http_response(r, "Unable to query journal entries", show_url = True)
+      return None
+
+  def get_journal(self, journal_id):
+    """Get detailed information about the specified journal ID.
+
+       The dict returned from this method contains keys as defined in the `Tradervue Journal Documentation <https://github.com/tradervue/api-docs/blob/master/journal.md>`_.
+
+       :param str journal_id: The journal ID to query.
+       :return: a dict containing information about the journal ID or ``None`` on error.
+       :rtype: dict or None
+    """
+    journal_id = str(journal_id)
+    url = '/'.join([self.baseurl, 'journal', journal_id])
+
+    r = self.__get(url, None)
+    if r.status_code == 200:
+      self.log.debug("Successfully queried journal ID %s" % (journal_id))
+      return json.loads(r.text)
+    else:
+      self.__handle_bad_http_response(r, "Unable to query journal ID %s" % (journal_id), show_url = True)
+      return None
+
+  def update_journal(self, journal_id, notes = None):
+    """Update fields of the specified journal ID.
+
+       All arguments (other than ``journal_id``) to this method are optional. If not specified, that particular field won't be modified.
+
+       :param str journal_id: The journal ID to update.
+       :param notes: Any notes for the journal entry. Can include `Markdown <https://daringfireball.net/projects/markdown/>`_ syntax.
+       :type notes: str or None
+       :return: ``True`` if the journal was updated successfully, ``False`` otherwise.
+       :rtype: bool
+    """
+    journal_id = str(journal_id)
+    url = '/'.join([self.baseurl, 'journal', journal_id])
+
+    data = {}
+    if notes is not None: data['notes'] = notes
+
+    if len(data) == 0:
+      self.log.warning("No updates specified for journal ID %s. Not taking further action" % (journal_id))
+      return False
+
+    r = self.__put(url, data)
+    if r.status_code == 200:
+      self.log.debug("Successfully updated fields [%s] of journal ID %s: %s" % (' '.join(data.keys()), journal_id, r.text))
+      return True
+    else:
+      self.__handle_bad_http_response(r, "Unable to update fields [%s] of journal ID" % (' '.join(data.keys()), journal_id))
+      return False
+
+  def create_journal(self, date, notes = None, return_url = False):
+    """Create a new journal entry. This is the equivalent of the 'Create New Journal Entry' feature on the website.
+
+       :param date: The date of the journal entry
+       :param notes: Any notes for the journal entry. Can include `Markdown <https://daringfireball.net/projects/markdown/>`_ syntax.
+       :param bool return_url: If set to ``True``, the return value will be the value of the ``Location`` header. If ``False`` the journal ID is returned.
+       :type date: date or datetime or None
+       :type notes: str or None
+       :return: The new journal ID if ``return_url`` is False or the Location URL if it is ``True``. ``None`` is returned if an error occurs.
+       :rtype: str or None
+    """
+    url = '/'.join([self.baseurl, 'journal'])
+
+    data = { 'date': date.strftime('%Y-%m-%d') }
+    if notes is not None: data['notes'] = notes
+
+    r = self.__post(url, data)
+    if r.status_code == 201:
+      self.log.debug("Successfully created new journal entry for %s: %s" % (data['date'], r.text))
+      if return_url:
+        return r.headers['Location']
+      else:
+        payload = json.loads(r.text)
+        return payload['id']
+    else:
+      self.__handle_bad_http_response(r, "New journal entry creation for %s" % (data['date']))
+      return None
+
+    pass
+
+  def delete_journals(self, *journal_ids):
+    """Delete the specified journal IDs.
+
+       :param list journal_ids: The journal IDs to be deleted.
+       :return: A list of bool values (one per journal ID argument). ``True`` indicates the journal entry was deleted successfully. ``False`` indicates an error occured while deleting the journal ID.
+       :rtype: list of bool
+    """
+    results = []
+
+    for journal_id in journal_ids:
+      if not self.delete_journal(journal_id):
+        self.log.error("Unable to delete journal ID %s" % (journal_id))
+        results.append(False)
+      else:
+        results.append(True)
+
+    return results
+
+  def delete_journal(self, journal_id):
+    """Delete the specified journal ID.
+
+       :param str journal_id: The journal ID to be deleted.
+       :return: ``True`` if the journal entry was deleted successfully, ``False`` otherwise.
+       :rtype: bool
+    """
+    journal_id = str(journal_id)
+    url = '/'.join([self.baseurl, 'journal', journal_id])
+
+    r = self.__delete(url, None)
+    if r.status_code == 200:
+      self.log.debug("Successfully deleted journal %s: %s" % (journal_id, r.text))
+      return True
+    else:
+      self.__handle_bad_http_response(r, "Deletion of journalID %s" % (journal_id))
+      return False
+
 
