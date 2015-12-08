@@ -177,7 +177,7 @@ class Tradervue:
     data = { 'symbol': symbol, 'shared': shared }
     if notes is not None: data['notes'] = notes
     if initial_risk is not None: data['initial_risk'] = initial_risk
-    if len(tags) > 0: data['tags'] = copy.deepcopy(tags)
+    if tags is not None and len(tags) > 0: data['tags'] = copy.deepcopy(tags)
 
     r = self.__post(url, data)
     if r.status_code == 201:

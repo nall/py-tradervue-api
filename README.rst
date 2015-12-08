@@ -12,8 +12,8 @@ Below is a small example usage:
 .. code-block:: python
 
   import datetime
-  import tradervue
-  tv = tradervue.Tradervue(username, password, user_agent)
+  from tradervue import Tradervue
+  tv = Tradervue(username, password, user_agent)
   trades = tv.get_trades(symbol = 'OEX', startdate = datetime.date(2015, 9, 1))
   for t in trades:
     print "Trade %s Profit/Loss: $%s" % (t['id'], t['gross_pl'])
