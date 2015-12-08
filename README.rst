@@ -18,6 +18,6 @@ Below is a small example usage:
   for t in trades:
     print "Trade %s Profit/Loss: $%s" % (t['id'], t['gross_pl'])
 
-.. autoclass:: tradervue.Tradervue
+.. autoclass:: tradervue.tradervue.Tradervue
     :members: 
 
