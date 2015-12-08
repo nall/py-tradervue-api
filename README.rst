@@ -5,6 +5,7 @@ This is a Python implementation of the `Tradervue <https://www.tradervue.com>`_ 
 * Trade management
 * Importing & querying trade executions
 * User management
+* Journal entry management
 
 Below is a small example usage:
 
