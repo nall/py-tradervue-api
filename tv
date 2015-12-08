@@ -64,7 +64,7 @@ def main():
   setup_logging()
   args = parse_cmdline_args()
 
-  tv = tradervue.Tradervue(args.username, args.password, 'PyTradervue (jon@nall.cc)')
+  tv = tradervue.Tradervue(args.username, args.password, 'PyTradervue (jon.nall@gmail.com)')
   tid = tv.create_trade(args.symbol, args.notes, args.initial_risk, args.shared, args.tag)
   LOG.info("Created trade ID %s" % (tid))
 
