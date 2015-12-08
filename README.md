@@ -8,7 +8,7 @@ This repository contains a Python implementation of the Tradervue API and small 
 
 ## Documentation
 
-   * [Python Tradervue API](http://nall.github.io/py-tradervue/py-tradervue.html)
+   * [Python Tradervue API](http://nall.github.io/py-tradervue/py-tradervue.html) (this library)
    * [Tradervue REST API](https://github.com/tradervue/api-docs)
 
 ## Example usage
