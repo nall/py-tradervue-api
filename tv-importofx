@@ -181,31 +181,37 @@ def main():
     daystring = 'day' if args.days == 1 else 'days'
     LOG.info("No executions generated from %d %s of OFX transactions" % (args.days, daystring))
     return 0
-
+   
   LOG.info("Importing %d executions into Tradervue" % (len(executions)))
-
   tv = tradervue.Tradervue(credentials[0], credentials[1], TRADERVUE_USERAGENT, verbose_http = args.debug_http)
   result = tv.import_executions(executions, args.account_tag, args.tags, allow_duplicates = args.allow_duplicates, overlay_commissions = args.overlay_commissions, wait_for_completion = True)
+
   if result is None:
     LOG.error("Error occurred while importing transactions")
   elif result['status'] == 'succeeded':
     info = []
     if result['info']['duplicate_count'] > 0:
+      LOG.warning("Duplicates: %d" % (result['info']['duplicate_count']))
       info.append('%s%d duplicates%s' % (Fore.YELLOW, result['info']['duplicate_count'], Fore.RESET))
     if result['info']['overquota_count'] > 0:
-      info.append('%s%d over quota%s' % (Fore.YELLOW, result['info']['overquota_count'], Fore.RESET))
+      LOG.error("Over quota: %d" % (result['info']['overquota_count']))
+      info.append('%s%d over quota%s' % (Fore.RED, result['info']['overquota_count'], Fore.RESET))
     if result['info']['skipped_futures']:
-      info.append('%sskipped futures%s' % (Fore.YELLOW, Fore.RESET))
+      LOG.error("Skipped futures (Do you need to upgrade your plan?)")
+      info.append('%sskipped futures%s' % (Fore.RED, Fore.RESET))
     if result['info']['skipped_options']:
-      info.append('%sskipped options%s' % (Fore.YELLOW, Fore.RESET))
+      LOG.error("Skipped options (Do you need to upgrade your plan?)")
+      info.append('%sskipped options%s' % (Fore.RED, Fore.RESET))
     if result['info']['skipped_forex']:
-      info.append('%sskipped forex%s' % (Fore.YELLOW, Fore.RESET))
+      LOG.error("Skipped Forex (Do you need to upgrade your plan?)")
+      info.append('%sskipped Forex%s' % (Fore.RED, Fore.RESET))
 
     infostring = ''
     if len(info) > 0:
       infostring = ' (%s)' % (', '.join(info))
 
-    LOG.info("Successfully imported %d executions%s" % (result['info']['exec_count'], infostring))
+    LOG.info("Successfully processed %d of %d executions%s." % (result['info']['exec_count'], len(executions), infostring))
+
   elif result['status'] == 'failed':
     unimported_count = len(executions) - result['info']['exec_count']
     errmsg = result['info']['error_description']
@@ -264,6 +270,17 @@ def _convert_to_tv_ticker(ticker):
 
   return ticker
 
+def _option_is_mini(transaction, security):
+  assert transaction.type in [ofxparse.ofxparse.InvestmentTransaction.BuyOpt, ofxparse.ofxparse.InvestmentTransaction.SellOpt], "Transaction %s is not an option" % (transaction)
+
+  # Mini options trade 10 shares per contract instead of 100. Use that as our heuristic as
+  # It's more reliable than parsing strings
+  #
+  if transaction.shares_per_contract == 10:
+    return True
+  else:
+    return False
+
 def execution_for_transaction(t, security_list, institution):
   security = _info_for_security(t.security, security_list)
 
@@ -280,7 +297,7 @@ def execution_for_transaction(t, security_list, institution):
   if t.type == ofxparse.ofxparse.InvestmentTransaction.BuyOpt or t.type == ofxparse.ofxparse.InvestmentTransaction.SellOpt:
     o_info = _parse_option_ticker(security.ticker)
     execution['symbol'] = _convert_to_tv_ticker(o_info['underlying'])
-    execution['option'] = "%s%02d %02d %d %s" % (calendar.month_abbr[int(o_info['month'])].upper(), o_info['day'], o_info['year'], o_info['strike'], 'CALL' if o_info['otype'] == 'C' else 'PUT')
+    execution['option'] = "%s%02d %02d %d %s%s" % (calendar.month_abbr[int(o_info['month'])].upper(), o_info['day'], o_info['year'], o_info['strike'], 'CALL' if o_info['otype'] == 'C' else 'PUT', ' M' if _option_is_mini(t, security) else '')
 
   return execution
 

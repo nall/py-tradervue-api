@@ -41,6 +41,14 @@ The tv-importofx requires the latest [ofxparse](https://github.com/jseutter/ofxp
       --debug               Enable verbose debugging messages
       --debug_http          Enable verbose HTTP request/response debugging messages
 
+### Which brokerages are supported?
+I've tested the brokerages below, though any brokerage supported by ofxclient ([ofxclient FAQ](http://captin411.github.io/ofxclient/faq.html)) should work. That said, there are sometimes issues in the OFX provided from the brokerage that need to be fixed up (for instance, OptionsXpress doesn't return the trade's execution time in GMT as it should so those dates must be fixed up before sending to Tradervue). 
+
+   * Schwab
+   * OptionsXpress
+
+If you are able to successfully import trades from your brokerage, let me know and I'll add it to this list.
+
 ### Official ofxparse Repo
 
     pip install git+https://github.com/jseutter/ofxparse
