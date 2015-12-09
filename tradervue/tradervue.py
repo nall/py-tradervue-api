@@ -74,6 +74,9 @@ class Tradervue:
   """Here's some class stuff more
   """
 
+  def __color_text(self, color, text):
+    return '%s%s%s' % (color, text, Fore.RESET)
+
   def __init__(self, username, password, user_agent, target_user = None, baseurl = 'https://www.tradervue.com', verbose_http = False):
     """Construct a Tradervue instance.
 
@@ -158,6 +161,100 @@ class Tradervue:
     if r.status_code == 403 and self.target_user:
       self.log.error("No permission to issue API calls on behalf of user %d")
 
+  def __delete_object(self, key, object_id):
+    object_id = str(object_id)
+    url = '/'.join([self.baseurl, key, object_id])
+
+    r = self.__delete(url, None)
+    if r.status_code == 200:
+      self.log.debug("%s-DELETE[%s]: %s" % (key.upper(), object_id, self.__color_text(Fore.GREEN, 'SUCCESS')))
+      return True
+    else:
+      self.__handle_bad_http_response(r, "%s-DELETE[%s]: %s" % (key.upper(), object_id, self.__color_text(Fore.RED, 'FAILED')))
+      return False
+
+  def __create_object(self, key, user_identifier, data, return_url):
+    url = '/'.join([self.baseurl, key])
+
+    r = self.__post(url, data)
+    if r.status_code == 201:
+      self.log.debug("%s-CREATE[%s]: %s" % (key.upper(), user_identifier, self.__color_text(Fore.GREEN, 'SUCCESS')))
+      if return_url:
+        return r.headers['Location']
+      else:
+        payload = json.loads(r.text)
+        return payload['id']
+    else:
+      self.__handle_bad_http_response(r, "%s-CREATE[%s]: %s" % (key.upper(), user_identifier, self.__color_text(Fore.RED, 'FAILED')))
+      return None
+
+  def __update_object(self, key, object_id, data):
+    object_id = str(object_id)
+
+    if len(data) == 0:
+      self.log.warning("No updates specified for %s ID %s. Not taking further action" % (key, object_id))
+      return False
+
+    url = '/'.join([self.baseurl, key, object_id])
+    r = self.__put(url, data)
+    if r.status_code == 200:
+      self.log.debug("%s-UPDATE[%s]: (%s) %s" % (key.upper(), object_id, ' '.join(data.keys()), self.__color_text(Fore.GREEN, 'SUCCESS')))
+      return True
+    else:
+      self.__handle_bad_http_response(r, "%s-UPDATE[%s]: (%s) %s" % (key.upper(), object_id, ' '.join(data.keys()), self.__color_text(Fore.RED, 'FAILED')))
+      return False
+
+  def __get_objects(self, key, data, result_key = None, max_objects = 25):
+    total_pages = 1
+    if max_objects > 100:
+      total_pages = int(math.ceil(max_objects / 100.0))
+
+    objects = []
+    for page in range(1, total_pages + 1):
+      objects_left = max_objects - len(objects)
+      data['page'] = page
+      data['count'] = 100 if objects_left >= 100 else objects_left
+      cur_objects = self.__get_object(key, None, None, result_key, data)
+      if cur_objects is None:
+        self.log.error("Found error condition when querying %s" % (data))
+        return None
+      elif len(cur_objects) == 0:
+        self.log.debug("No trades were found when querying %s" % (data))
+        break
+      else:
+        self.log.debug("%d object(s) were found when querying %s" % (len(cur_objects), data))
+        objects.extend(cur_objects)
+
+    return objects
+
+
+  def __get_object(self, endpoint, fragments, object_id, result_key = None, data = None):
+
+    if fragments is None: fragments = []
+
+    url_array = [self.baseurl, endpoint]
+    if object_id is not None: url_array.append(str(object_id))
+    url_array.extend(fragments)
+
+    url = '/'.join(url_array)
+    f_debug_string = '' if len(fragments) == 0 else '[%s]' % ('/'.join(fragments))
+
+    r = self.__get(url, data)
+    if r.status_code == 200:
+      self.log.debug("%s-GET[%s]%s: %s" % (endpoint.upper(), object_id, f_debug_string, self.__color_text(Fore.GREEN, 'SUCCESS')))
+      result = json.loads(r.text)
+      if result_key is not None:
+        if result_key not in result:
+          self.log.error("Unable to find '%s' key in %s results: %s" % (result_key, endpoint, r.text))
+          return None
+        else:
+          return result[result_key]
+      else:
+        return result
+    else:
+      self.__handle_bad_http_response(r, "%s-GET[%s]%s: %s" % (endpoint.upper(), object_id, f_debug_string, self.__color_text(Fore.RED, 'FAILED')), show_url = True)
+      return None
+
   def create_trade(self, symbol, notes = None, initial_risk = None, shared = False, tags = [], return_url = False):
     """Create a new trade. This is the equivalent of the 'New Trade' feature on the website.
 
@@ -172,42 +269,12 @@ class Tradervue:
        :return: The new trade ID if ``return_url`` is False or the Location URL if it is ``True``. ``None`` is returned if an error occurs.
        :rtype: str or None
     """
-    url = '/'.join([self.baseurl, 'trades'])
-
     data = { 'symbol': symbol, 'shared': shared }
     if notes is not None: data['notes'] = notes
     if initial_risk is not None: data['initial_risk'] = initial_risk
     if tags is not None and len(tags) > 0: data['tags'] = copy.deepcopy(tags)
 
-    r = self.__post(url, data)
-    if r.status_code == 201:
-      self.log.debug("Successfully created new trade for %s: %s" % (symbol, r.text))
-      if return_url: 
-        return r.headers['Location']
-      else:
-        payload = json.loads(r.text)
-        return payload['id']
-    else:
-      self.__handle_bad_http_response(r, "New trade creation for %s" % (symbol))
-      return None
-
-  def delete_trades(self, *trade_ids):
-    """Delete the specified trade IDs.
-
-       :param list trade_ids: The trade IDs to be deleted.
-       :return: A list of bool values (one per trade ID argument). ``True`` indicates the trade was deleted successfully. ``False`` indicates an error occured while deleting the trade ID.
-       :rtype: list of bool
-    """
-    results = []
-
-    for trade_id in trade_ids:
-      if not self.delete_trade(trade_id):
-        self.log.error("Unable to delete trade ID %s" % (trade_id))
-        results.append(False)
-      else:
-        results.append(True)
-
-    return results
+    return self.__create_object('trades', symbol, data, return_url)
 
   def delete_trade(self, trade_id):
     """Delete the specified trade ID.
@@ -216,16 +283,7 @@ class Tradervue:
        :return: ``True`` if the trade was deleted successfully, ``False`` otherwise.
        :rtype: bool
     """
-    trade_id = str(trade_id)
-    url = '/'.join([self.baseurl, 'trades', trade_id])
-
-    r = self.__delete(url, None)
-    if r.status_code == 200:
-      self.log.debug("Successfully deleted trade %s: %s" % (trade_id, r.text))
-      return True
-    else:
-      self.__handle_bad_http_response(r, "Deletion of tradeID %s" % (trade_id))
-      return False
+    return self.__delete_object('trades', trade_id)
 
   def get_trades(self, symbol = None, tag_expr = None, side = None, duration = None, startdate = None, enddate = None, winners = None, max_trades = 25):
     """Query for trades matching the specified criteria.
@@ -259,7 +317,7 @@ class Tradervue:
     tag_warning_on_no_results = False
     if tag_expr is not None:
       if re.search(r'\sand\s', tag_expr) or re.search(r'\sor\s', tag_expr):
-        # Dubious expression -- used and/or, but not uppercase which is required
+        # Dubious expression -- used and/or, but not upper which is required
         # If we don't return results, warn the user
         tag_warning_on_no_results = True
       data['tag'] = tag_expr
@@ -280,44 +338,12 @@ class Tradervue:
     if enddate is not None: data['enddate'] = enddate.strftime('%m/%d/%Y')
     if winners is not None: data['plgross'] = 'W' if winners else 'L'
 
-    total_pages = 1
-    if max_trades > 100:
-      total_pages = int(math.ceil(max_trades / 100.0))
-
-    all_trades = []
-    for page in range(1, total_pages + 1):
-      trades_left = max_trades - len(all_trades)
-      data['page'] = page
-      data['count'] = 100 if trades_left >= 100 else trades_left
-      trades = self.__get_trades(data)
-      if trades is None:
-        self.log.debug("Found error condition when querying %s" % (data))
-        return None
-      elif len(trades) == 0:
-        self.log.debug("No trades were found when querying %s" % (data))
-        break
-      else:
-        self.log.debug("%d trade(s) were found when querying %s" % (len(trades), data))
-        all_trades.extend(trades)
+    all_trades = self.__get_objects('trades', data, 'trades', max_trades)
 
     if tag_warning_on_no_results and len(all_trades) == 0:
-      self.log.warning("No results found for dubious tag expression '%s'. Make sure AND and OR are uppercase" % (tag_expr))
+      self.log.warning("No results found for dubious tag expression '%s'. Make sure AND and OR are upper" % (tag_expr))
 
     return all_trades
-
-  def __get_trades(self, data):
-    url = '/'.join([self.baseurl, 'trades'])
-    r = self.__get(url, data)
-    if r.status_code == 200:
-      self.log.debug("Successfully queried url %s" % (r.url))
-      result = json.loads(r.text)
-      if 'trades' not in result:
-        self.log.error("No 'trades' field in query result for URL: %s\n%s" % (r.url, r.text))
-        return None
-      return result['trades']
-    else:
-      self.__handle_bad_http_response(r, "Unable to query trades", show_url = True)
-      return None
 
   def get_trade(self, trade_id):
     """Get detailed information about the specified trade ID.
@@ -328,16 +354,7 @@ class Tradervue:
        :return: a dict containing information about the trade ID or ``None`` on error.
        :rtype: dict or None
     """
-    trade_id = str(trade_id)
-    url = '/'.join([self.baseurl, 'trades', trade_id])
-
-    r = self.__get(url, None)
-    if r.status_code == 200:
-      self.log.debug("Successfully queried trade ID %s" % (trade_id))
-      return json.loads(r.text)
-    else:
-      self.__handle_bad_http_response(r, "Unable to query trade ID %s" % (trade_id), show_url = True)
-      return None
+    return self.__get_object('trades', None, trade_id)
 
   def get_trade_executions(self, trade_id):
     """Get detailed information about the executions of the specified trade ID.
@@ -348,21 +365,7 @@ class Tradervue:
        :return: a dict containing information about the executions for trade ID or ``None`` on error.
        :rtype: dict or None
     """
-    trade_id = str(trade_id)
-    url = '/'.join([self.baseurl, 'trades', trade_id, 'executions'])
-
-    r = self.__get(url, None)
-    if r.status_code == 200:
-      executions = json.loads(r.text)
-      if 'executions' not in executions:
-        self.log.error("Unable to find 'executions' key in executions results: %s" % (r.text))
-        return None
-      executions = executions['executions']
-      self.log.debug("Successfully queried trade ID %s executions (found %d executions)" % (trade_id, len(executions)))
-      return executions
-    else:
-      self.__handle_bad_http_response(r, "Unable to query trade ID %s executions" % (trade_id), show_url = True)
-      return None
+    return self.__get_object('trades', ['executions'], trade_id, 'executions')
 
   def get_trade_comments(self, trade_id):
     """Get detailed information about the comments of the specified trade ID.
@@ -373,21 +376,7 @@ class Tradervue:
        :return: a dict containing information about the comments for trade ID or ``None`` on error.
        :rtype: dict or None
     """
-    trade_id = str(trade_id)
-    url = '/'.join([self.baseurl, 'trades', trade_id, 'comments'])
-
-    r = self.__get(url, None)
-    if r.status_code == 200:
-      comments = json.loads(r.text)
-      if 'comments' not in comments:
-        self.log.error("Unable to find 'comments' key in comments results: %s" % (r.text))
-        return None
-      comments = comments['comments']
-      self.log.debug("Successfully queried trade ID %s comments (found %d comments)" % (trade_id, len(comments)))
-      return comments
-    else:
-      self.__handle_bad_http_response(r, "Unable to query trade ID %s comments" % (trade_id), show_url = True)
-      return None
+    return self.__get_object('trades', ['comments'], trade_id, 'comments')
 
   def update_trade(self, trade_id, notes = None, shared = None, initial_risk = None, tags = None):
     """Update fields of the specified trade ID.
@@ -406,26 +395,13 @@ class Tradervue:
        :return: ``True`` if the trade was updated successfully, ``False`` otherwise.
        :rtype: bool
     """
-    trade_id = str(trade_id)
-    url = '/'.join([self.baseurl, 'trades', trade_id])
-
     data = {}
     if notes is not None: data['notes'] = notes
     if shared is not None: data['shared'] = shared
     if initial_risk is not None: data['initial_risk'] = initial_risk
     if tags is not None : data['tags'] = copy.deepcopy(tags)
 
-    if len(data) == 0:
-      self.log.warning("No updates specified for trade ID %s. Not taking further action" % (trade_id))
-      return False
-
-    r = self.__put(url, data)
-    if r.status_code == 200:
-      self.log.debug("Successfully updated fields [%s] of trade ID %s: %s" % (' '.join(data.keys()), trade_id, r.text))
-      return True
-    else:
-      self.__handle_bad_http_response(r, "Unable to update fields [%s] of trade ID" % (' '.join(data.keys()), trade_id))
-      return False
+    return self.__update_object('trades', trade_id, data)
 
   def import_status(self):
     """Query status of the current import.
@@ -435,22 +411,16 @@ class Tradervue:
        :return: a dict of the current import state or ``None`` on error
        :rtype: dict or None
     """
-    url = '/'.join([self.baseurl, 'imports'])
-
-    r = self.__get(url, None)
-    if r.status_code == 200:
-      self.log.debug("Successfully queried import status: %s" % (r.text))
-      data = json.loads(r.text)
-      status = data['status']
-      if not status in ['ready', 'queued', 'processing', 'succeeded', 'failed' ]:
-        self.log.error("Unexpected status '%s' for import status. Check API and update library" % (status))
-        return None
-      return data
-    else:
-      self.__handle_bad_http_response(r, "Unable to query import status")
+    result = self.__get_object('imports', None, None)
+    if not 'status' in result:
+      self.log.error("Unable to find 'status' key in result: %s" % (result))
       return None 
+    elif not result['status'] in ['ready', 'queued', 'processing', 'succeeded', 'failed' ]:
+      self.log.error("Unexpected status '%s' for import status. Check API and update library. Result = %s" % (status, result))
+      return None
+    return result
 
-  def import_executions(self, executions, account_tag = None, tags = None, allow_duplicates = False, overlay_commissions = False, import_retries = 3, wait_for_completion = False, wait_retries = 3, secs_per_wait_retry = 15):
+  def import_executions(self, executions, account_tag = None, tags = None, allow_duplicates = False, overlay_commissions = False, import_retries = 3, wait_for_completion = False, wait_retries = 5, secs_per_wait_retry = 3):
     """Import the specified trade executions.
 
        :param list executions: The executions to import. This should be a list of dicts. Each dict should have keys as specified in the `Tradervue Import Documentation <https://github.com/tradervue/api-docs/blob/master/imports.md>`_.
@@ -534,7 +504,7 @@ class Tradervue:
       elif data['status'] == 'succeeded':
         self.log.debug("Import was successful")
         return data
-      elif data['status'] == 'failure':
+      elif data['status'] == 'failed':
         self.log.error("Import had some failures")
         return data
       elif data['status'] in ['queued', 'processing']:
@@ -558,20 +528,7 @@ class Tradervue:
        :return: a list of users in the organization or ``None`` on error
        :rtype: list or None
     """
-    url = '/'.join([self.baseurl, 'users'])
-
-    r = self.__get(url, None)
-    if r.status_code == 200:
-      users = json.loads(r.text)
-      if 'users' not in users:
-        self.log.error("Unable to find 'users' key in users results: %s" % (r.text))
-        return None
-      users = users['users']
-      self.log.debug("Successfully queried users (found %d users)" % (len(users)))
-      return users
-    else:
-      self.__handle_bad_http_response(r, "Unable to query users", show_url = True)
-      return None
+    return self.__get_object('users', None, None, 'users')
 
   def get_user(self, user_id):
     """Get detailed information about the specified user ID.
@@ -585,17 +542,7 @@ class Tradervue:
        :return: information on the specified user ID or ``None`` if an error occurs
        :rtype: list or None
     """
-    user_id = str(user_id)
-    url = '/'.join([self.baseurl, 'users'])
-
-    r = self.__get(url, None)
-    if r.status_code == 200:
-      user = json.loads(r.text)
-      self.log.debug("Successfully queried user ID %s" % (user_id))
-      return user
-    else:
-      self.__handle_bad_http_response(r, "Unable to query user ID %s" % (user_id), show_url = True)
-      return None
+    return self.__get_object('users', None, user_id, 'users')
 
   def update_user(self, user_id, username = None, email = None, plan = None):
     """Update fields for the specified user ID.
@@ -616,18 +563,14 @@ class Tradervue:
        :return: ``True`` if the user ID was successfully updated, ``False`` otherwise
        :rtype: bool
     """
-    user_id = str(user_id)
-    url = '/'.join([self.baseurl, 'users'])
+    data = {}
+    if username is not None: data['username'] = username
+    if email is not None: data['plan'] = email
+    if plan is not None: data['plan'] = plan
 
-    r = self.__put(url, data)
-    if r.status_code == 200:
-      self.log.debug("Successfully updated fields [%s] of user ID %s: %s" % (' '.join(data.keys()), user_id, r.text))
-      return True
-    else:
-      self.__handle_bad_http_response(r, "Unable to update fields [%s] of user ID" % (' '.join(data.keys()), user_id))
-      return False
+    return self.__update_object('users', user_id, data)
 
-  def create_user(self, username, email, plan, password, trial_end = None):
+  def create_user(self, username, email, plan, password, trial_end = None, return_url = False):
     """Create a new user.
 
        .. note::
@@ -640,25 +583,16 @@ class Tradervue:
        :param str password: the password for the new user
        :param trial_end: If specified, set a date for when the new user's trial period ends
        :type trial_end: date or datetime or None
-       :return: the newly created user ID if successful or ``None`` if an error occurs
+       :param bool return_url: If set to ``True``, the return value will be the value of the ``Location`` header. If ``False`` the trade ID is returned.
+       :return: the new user ID if ``return_url`` is False or the Location URL if it is ``True``. ``None`` is returned if an error occurs.
        :rtype: str or None
     """
-    url = '/'.join([self.baseurl, 'users'])
-
     data = { 'username': username, 'plan': plan, 'email': email, 'password': password }
     if trial_end is not None: data['trial_end'] = trial_end.strftime('%Y-%m-%d')
 
-    r = self.__post(url, data)
-    if r.status_code == 201:
-      payload = json.loads(r.text)
-      user_id = payload['id']
-      self.log.debug("Successfully created new user ID %s for %s: %s" % (user_id, username, r.text))
-      return user_id
-    else:
-      self.__handle_bad_http_response(r, "New trade creation for %s" % (symbol))
-      return None
+    return self.__create_object('users', username, data, return_url)
 
-  def get_journals(self, date = None, startdate = None, enddate = None, max_entries = 25):
+  def get_journals(self, date = None, startdate = None, enddate = None, max_journals = 25):
     """Query for journal entries matching the specified criteria.
 
        All arguments to this method are optional. If not specified, they are not part of the query. 
@@ -668,11 +602,11 @@ class Tradervue:
        :param date: Find journal entry for the specified date. If this argument is used, neither ``startdate`` nor ``enddate`` should be specified.
        :param startdate: Find journal entries occuring on or after the specified time. Do not use if ``date`` is specified.
        :param enddate: Find journal entries occuring on or before the specified time. Do not use if ``date`` is specified.
-       :param max_entries: Return at most the specified number of journal entries
+       :param max_journals: Return at most the specified number of journal entries
        :type date: date or datetime or None
        :type startdate: date or datetime or None
        :type enddate: date or datetime or None
-       :type max_entries: int or None
+       :type max_journals: int or None
        :return: a list of journal entries matching the specified critiera or ``None`` if an error is encountered
        :rtype: list or none
     """
@@ -684,62 +618,33 @@ class Tradervue:
     if startdate is not None: data['startdate'] = startdate.strftime('%m/%d/%Y')
     if enddate is not None: data['enddate'] = enddate.strftime('%m/%d/%Y')
 
-    total_pages = 1
-    if max_entries > 100:
-      total_pages = int(math.ceil(max_entries / 100.0))
+    return self.__get_objects('journal', data, 'journal_entries', max_journals)
 
-    all_journals = []
-    for page in range(1, total_pages + 1):
-      entries_left = max_entries - len(all_journals)
-      data['page'] = page
-      data['count'] = 100 if entries_left >= 100 else entries_left
-      journals = self.__get_journals(data)
-      if journals is None:
-        self.log.debug("Found error condition when querying %s" % (data))
-        return None
-      elif len(journals) == 0:
-        self.log.debug("No journal entries were found when querying %s" % (data))
-        break
-      else:
-        entrystring = 'entry' if len(journals) == 1 else 'entries'
-        self.log.debug("%d journal %s were found when querying %s" % (len(journals), entrystring, data))
-        all_journals.extend(journals)
-
-    return all_journals
-
-  def __get_journals(self, data):
-    url = '/'.join([self.baseurl, 'journal'])
-    r = self.__get(url, data)
-    if r.status_code == 200:
-      self.log.debug("Successfully queried url %s" % (r.url))
-      result = json.loads(r.text)
-      if 'journal_entries' not in result:
-        self.log.error("No 'journal_entries' field in query result for URL: %s\n%s" % (r.url, r.text))
-        return None
-      return result['journal_entries']
-    else:
-      self.__handle_bad_http_response(r, "Unable to query journal entries", show_url = True)
-      return None
-
-  def get_journal(self, journal_id):
-    """Get detailed information about the specified journal ID.
+  def get_journal(self, journal_id = None, date = None):
+    """Get detailed information about the specified journal ID (or the journal on the specified date). Exactly one of ``journal_id`` or ``date`` must be specified.
 
        The dict returned from this method contains keys as defined in the `Tradervue Journal Documentation <https://github.com/tradervue/api-docs/blob/master/journal.md>`_.
 
-       :param str journal_id: The journal ID to query.
+       :param journal_id: The journal ID to query.
+       :param date: The date to query
+       :type str or None
+       :type date or datetime or None
        :return: a dict containing information about the journal ID or ``None`` on error.
        :rtype: dict or None
     """
-    journal_id = str(journal_id)
-    url = '/'.join([self.baseurl, 'journal', journal_id])
+    if journal_id is not None and date is not None:
+      raise ValueError("Must not specify both journal_id and date to get_journal")
+    elif journal_id is None and date is None:
+      raise ValueError("Must specify either journal_id or date to get_journal")
 
-    r = self.__get(url, None)
-    if r.status_code == 200:
-      self.log.debug("Successfully queried journal ID %s" % (journal_id))
-      return json.loads(r.text)
+    if journal_id is not None:
+      return self.__get_object('journal', None, journal_id)
     else:
-      self.__handle_bad_http_response(r, "Unable to query journal ID %s" % (journal_id), show_url = True)
-      return None
+      journals = self.get_journals(date = date, max_journals = 1)
+      if journals is None or len(journals) == 0:
+        return None
+      else:
+        return self.get_journal(journals[0]['id'])
 
   def update_journal(self, journal_id, notes = None):
     """Update fields of the specified journal ID.
@@ -752,23 +657,10 @@ class Tradervue:
        :return: ``True`` if the journal was updated successfully, ``False`` otherwise.
        :rtype: bool
     """
-    journal_id = str(journal_id)
-    url = '/'.join([self.baseurl, 'journal', journal_id])
-
     data = {}
     if notes is not None: data['notes'] = notes
 
-    if len(data) == 0:
-      self.log.warning("No updates specified for journal ID %s. Not taking further action" % (journal_id))
-      return False
-
-    r = self.__put(url, data)
-    if r.status_code == 200:
-      self.log.debug("Successfully updated fields [%s] of journal ID %s: %s" % (' '.join(data.keys()), journal_id, r.text))
-      return True
-    else:
-      self.__handle_bad_http_response(r, "Unable to update fields [%s] of journal ID" % (' '.join(data.keys()), journal_id))
-      return False
+    return self.__update_object('journal', journal_id, data)
 
   def create_journal(self, date, notes = None, return_url = False):
     """Create a new journal entry. This is the equivalent of the 'Create New Journal Entry' feature on the website.
@@ -781,42 +673,10 @@ class Tradervue:
        :return: The new journal ID if ``return_url`` is False or the Location URL if it is ``True``. ``None`` is returned if an error occurs.
        :rtype: str or None
     """
-    url = '/'.join([self.baseurl, 'journal'])
-
     data = { 'date': date.strftime('%Y-%m-%d') }
     if notes is not None: data['notes'] = notes
 
-    r = self.__post(url, data)
-    if r.status_code == 201:
-      self.log.debug("Successfully created new journal entry for %s: %s" % (data['date'], r.text))
-      if return_url:
-        return r.headers['Location']
-      else:
-        payload = json.loads(r.text)
-        return payload['id']
-    else:
-      self.__handle_bad_http_response(r, "New journal entry creation for %s" % (data['date']))
-      return None
-
-    pass
-
-  def delete_journals(self, *journal_ids):
-    """Delete the specified journal IDs.
-
-       :param list journal_ids: The journal IDs to be deleted.
-       :return: A list of bool values (one per journal ID argument). ``True`` indicates the journal entry was deleted successfully. ``False`` indicates an error occured while deleting the journal ID.
-       :rtype: list of bool
-    """
-    results = []
-
-    for journal_id in journal_ids:
-      if not self.delete_journal(journal_id):
-        self.log.error("Unable to delete journal ID %s" % (journal_id))
-        results.append(False)
-      else:
-        results.append(True)
-
-    return results
+    return self.__create_object('journal', data['date'], data, return_url)
 
   def delete_journal(self, journal_id):
     """Delete the specified journal ID.
@@ -825,15 +685,4 @@ class Tradervue:
        :return: ``True`` if the journal entry was deleted successfully, ``False`` otherwise.
        :rtype: bool
     """
-    journal_id = str(journal_id)
-    url = '/'.join([self.baseurl, 'journal', journal_id])
-
-    r = self.__delete(url, None)
-    if r.status_code == 200:
-      self.log.debug("Successfully deleted journal %s: %s" % (journal_id, r.text))
-      return True
-    else:
-      self.__handle_bad_http_response(r, "Deletion of journalID %s" % (journal_id))
-      return False
-
-
+    return self.__delete_object('journal', journal_id)
