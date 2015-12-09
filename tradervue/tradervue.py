@@ -686,3 +686,65 @@ class Tradervue:
        :rtype: bool
     """
     return self.__delete_object('journal', journal_id)
+
+  def get_notes(self, max_notes = 25):
+    """Query for journal notes.
+
+       The list returned from this method contains dict objects which have fields as defined in the `Tradervue Journal Notes Documentation <https://github.com/tradervue/api-docs/blob/master/notes.md>`_.
+
+       :param max_notes: Return at most the specified number of journal notes
+       :type max_notes: int or None
+       :return: a list of journal notes or ``None`` if an error is encountered
+       :rtype: list or None
+    """
+    return self.__get_objects('notes', {}, 'journal_notes', max_notes)
+
+  def get_note(self, note_id):
+    """Get detailed information about the specified journal note ID.
+
+       The dict returned from this method contains keys as defined in the `Tradervue Journal Notes Documentation <https://github.com/tradervue/api-docs/blob/master/notes.md>`_.
+
+       :return: information on the specified journal note ID or ``None`` if an error occurs
+       :rtype: list or None
+    """
+    return self.__get_object('notes', None, note_id)
+
+  def update_note(self, note_id, notes = None):
+    """Update fields of the specified journal note ID.
+
+       All arguments (other than ``note_id``) to this method are optional. If not specified, that particular field won't be modified.
+
+       :param str note_id: The journal not ID to update.
+       :param notes: Any notes for the journal note entry. Can include `Markdown <https://daringfireball.net/projects/markdown/>`_ syntax.
+       :type notes: str or None
+       :return: ``True`` if the journal note was updated successfully, ``False`` otherwise.
+       :rtype: bool
+    """
+    data = {}
+    if notes is not None: data['notes'] = notes
+
+    return self.__update_object('notes', note_id, data)
+
+  def create_note(self, notes = None, return_url = False):
+    """Create a new journal note entry. This is the equivalent of the 'Create New Note' feature on the website.
+
+       :param notes: Any notes for the journal entry. Can include `Markdown <https://daringfireball.net/projects/markdown/>`_ syntax.
+       :param bool return_url: If set to ``True``, the return value will be the value of the ``Location`` header. If ``False`` the journal ID is returned.
+       :type notes: str or None
+       :return: The new journal note ID if ``return_url`` is False or the Location URL if it is ``True``. ``None`` is returned if an error occurs.
+       :rtype: str or None
+    """
+    data = {}
+    if notes is not None: data['notes'] = notes
+
+    return self.__create_object('notes', '', data, return_url)
+
+  def delete_note(self, note_id):
+    """Delete the specified journal note ID.
+
+       :param str note_id: The journal note ID to be deleted.
+       :return: ``True`` if the journal note entry was deleted successfully, ``False`` otherwise.
+       :rtype: bool
+    """
+    return self.__delete_object('notes', note_id)
+

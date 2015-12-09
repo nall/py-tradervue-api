@@ -5,6 +5,7 @@ This repository contains a Python implementation of the Tradervue API and small 
    * Importing & querying trade executions
    * User management
    * Journal entry management
+   * Journal notes management
 
 ## Documentation
 
