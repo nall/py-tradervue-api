@@ -309,7 +309,7 @@ class Tradervue:
        :type winners: bool or None
        :type max_trades: int or None
        :return: a list of trades matching the specified critiera or ``None`` if an error is encountered
-       :rtype: list or none
+       :rtype: list or None
     """
     data = { }
     if symbol is not None: data['symbol'] = symbol
@@ -608,7 +608,7 @@ class Tradervue:
        :type enddate: date or datetime or None
        :type max_journals: int or None
        :return: a list of journal entries matching the specified critiera or ``None`` if an error is encountered
-       :rtype: list or none
+       :rtype: list or None
     """
     if date is not None and (startdate is not None or enddate is not None):
       raise ValueError, "Cannot specify startdate or enddate if date is specified"
@@ -627,8 +627,8 @@ class Tradervue:
 
        :param journal_id: The journal ID to query.
        :param date: The date to query
-       :type str or None
-       :type date or datetime or None
+       :type journal_id: str or None
+       :type date: or datetime or None
        :return: a dict containing information about the journal ID or ``None`` on error.
        :rtype: dict or None
     """
