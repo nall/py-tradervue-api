@@ -34,7 +34,7 @@ import datetime
 import logging
 import pprint
 import sys
-from tradervue.tradervue import Tradervue, TradervueLogFormatter
+from tradervue import Tradervue, TradervueLogFormatter
 
 LOG = None
 
