@@ -53,6 +53,7 @@
 <li>Importing &amp; querying trade executions</li>
 <li>User management</li>
 <li>Journal entry management</li>
+<li>Journal notes management</li>
 </ul>
 <p>Below is a small example usage:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">datetime</span>
@@ -116,6 +117,31 @@
 </dd></dl>
 
 <dl class="method">
+<dt id="tradervue.tradervue.Tradervue.create_note">
+<code class="descname">create_note</code><span class="sig-paren">(</span><em>notes=None</em>, <em>return_url=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.create_note" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new journal note entry. This is the equivalent of the &#8216;Create New Note&#8217; feature on the website.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>notes</strong> (<em>str or None</em>) &#8211; <p>Any notes for the journal entry. Can include <a class="reference external" href="https://daringfireball.net/projects/markdown/">Markdown</a> syntax.</p>
+</li>
+<li><strong>return_url</strong> (<em>bool</em>) &#8211; If set to <code class="docutils literal"><span class="pre">True</span></code>, the return value will be the value of the <code class="docutils literal"><span class="pre">Location</span></code> header. If <code class="docutils literal"><span class="pre">False</span></code> the journal ID is returned.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The new journal note ID if <code class="docutils literal"><span class="pre">return_url</span></code> is False or the Location URL if it is <code class="docutils literal"><span class="pre">True</span></code>. <code class="docutils literal"><span class="pre">None</span></code> is returned if an error occurs.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">str or None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="tradervue.tradervue.Tradervue.create_trade">
 <code class="descname">create_trade</code><span class="sig-paren">(</span><em>symbol</em>, <em>notes=None</em>, <em>initial_risk=None</em>, <em>shared=False</em>, <em>tags=[]</em>, <em>return_url=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.create_trade" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a new trade. This is the equivalent of the &#8216;New Trade&#8217; feature on the website.</p>
@@ -146,7 +172,7 @@
 
 <dl class="method">
 <dt id="tradervue.tradervue.Tradervue.create_user">
-<code class="descname">create_user</code><span class="sig-paren">(</span><em>username</em>, <em>email</em>, <em>plan</em>, <em>password</em>, <em>trial_end=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.create_user" title="Permalink to this definition">¶</a></dt>
+<code class="descname">create_user</code><span class="sig-paren">(</span><em>username</em>, <em>email</em>, <em>plan</em>, <em>password</em>, <em>trial_end=None</em>, <em>return_url=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.create_user" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a new user.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -162,10 +188,11 @@
 <li><strong>plan</strong> (<em>str</em>) &#8211; the Tradervue plan level for the new user. Should be one of <code class="docutils literal"><span class="pre">'Free'</span></code>, <code class="docutils literal"><span class="pre">'Silver'</span></code>, or <code class="docutils literal"><span class="pre">'Gold'</span></code>.</li>
 <li><strong>password</strong> (<em>str</em>) &#8211; the password for the new user</li>
 <li><strong>trial_end</strong> (<em>date or datetime or None</em>) &#8211; If specified, set a date for when the new user&#8217;s trial period ends</li>
+<li><strong>return_url</strong> (<em>bool</em>) &#8211; If set to <code class="docutils literal"><span class="pre">True</span></code>, the return value will be the value of the <code class="docutils literal"><span class="pre">Location</span></code> header. If <code class="docutils literal"><span class="pre">False</span></code> the trade ID is returned.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the newly created user ID if successful or <code class="docutils literal"><span class="pre">None</span></code> if an error occurs</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the new user ID if <code class="docutils literal"><span class="pre">return_url</span></code> is False or the Location URL if it is <code class="docutils literal"><span class="pre">True</span></code>. <code class="docutils literal"><span class="pre">None</span></code> is returned if an error occurs.</p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">str or None</p>
@@ -194,18 +221,18 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="tradervue.tradervue.Tradervue.delete_journals">
-<code class="descname">delete_journals</code><span class="sig-paren">(</span><em>*journal_ids</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.delete_journals" title="Permalink to this definition">¶</a></dt>
-<dd><p>Delete the specified journal IDs.</p>
+<dt id="tradervue.tradervue.Tradervue.delete_note">
+<code class="descname">delete_note</code><span class="sig-paren">(</span><em>note_id</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.delete_note" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete the specified journal note ID.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>journal_ids</strong> (<em>list</em>) &#8211; The journal IDs to be deleted.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>note_id</strong> (<em>str</em>) &#8211; The journal note ID to be deleted.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A list of bool values (one per journal ID argument). <code class="docutils literal"><span class="pre">True</span></code> indicates the journal entry was deleted successfully. <code class="docutils literal"><span class="pre">False</span></code> indicates an error occured while deleting the journal ID.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal"><span class="pre">True</span></code> if the journal note entry was deleted successfully, <code class="docutils literal"><span class="pre">False</span></code> otherwise.</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list of bool</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
 </tr>
 </tbody>
 </table>
@@ -230,37 +257,25 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="tradervue.tradervue.Tradervue.delete_trades">
-<code class="descname">delete_trades</code><span class="sig-paren">(</span><em>*trade_ids</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.delete_trades" title="Permalink to this definition">¶</a></dt>
-<dd><p>Delete the specified trade IDs.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>trade_ids</strong> (<em>list</em>) &#8211; The trade IDs to be deleted.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A list of bool values (one per trade ID argument). <code class="docutils literal"><span class="pre">True</span></code> indicates the trade was deleted successfully. <code class="docutils literal"><span class="pre">False</span></code> indicates an error occured while deleting the trade ID.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list of bool</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
 <dt id="tradervue.tradervue.Tradervue.get_journal">
-<code class="descname">get_journal</code><span class="sig-paren">(</span><em>journal_id</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.get_journal" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get detailed information about the specified journal ID.</p>
+<code class="descname">get_journal</code><span class="sig-paren">(</span><em>journal_id=None</em>, <em>date=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.get_journal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get detailed information about the specified journal ID (or the journal on the specified date). Exactly one of <code class="docutils literal"><span class="pre">journal_id</span></code> or <code class="docutils literal"><span class="pre">date</span></code> must be specified.</p>
 <p>The dict returned from this method contains keys as defined in the <a class="reference external" href="https://github.com/tradervue/api-docs/blob/master/journal.md">Tradervue Journal Documentation</a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>journal_id</strong> (<em>str</em>) &#8211; The journal ID to query.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>journal_id</strong> (<em>str or None</em>) &#8211; The journal ID to query.</li>
+<li><strong>date</strong> (<em>or datetime or None</em>) &#8211; The date to query</li>
+</ul>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">a dict containing information about the journal ID or <code class="docutils literal"><span class="pre">None</span></code> on error.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">a dict containing information about the journal ID or <code class="docutils literal"><span class="pre">None</span></code> on error.</p>
+</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">dict or None</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">dict or None</p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -268,7 +283,7 @@
 
 <dl class="method">
 <dt id="tradervue.tradervue.Tradervue.get_journals">
-<code class="descname">get_journals</code><span class="sig-paren">(</span><em>date=None</em>, <em>startdate=None</em>, <em>enddate=None</em>, <em>max_entries=25</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.get_journals" title="Permalink to this definition">¶</a></dt>
+<code class="descname">get_journals</code><span class="sig-paren">(</span><em>date=None</em>, <em>startdate=None</em>, <em>enddate=None</em>, <em>max_journals=25</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.get_journals" title="Permalink to this definition">¶</a></dt>
 <dd><p>Query for journal entries matching the specified criteria.</p>
 <p>All arguments to this method are optional. If not specified, they are not part of the query.</p>
 <p>The list returned from this method contains dict objects which have fields as defined in the <a class="reference external" href="https://github.com/tradervue/api-docs/blob/master/journal.md">Tradervue Journal Documentation</a>.</p>
@@ -280,15 +295,51 @@
 <li><strong>date</strong> (<em>date or datetime or None</em>) &#8211; Find journal entry for the specified date. If this argument is used, neither <code class="docutils literal"><span class="pre">startdate</span></code> nor <code class="docutils literal"><span class="pre">enddate</span></code> should be specified.</li>
 <li><strong>startdate</strong> (<em>date or datetime or None</em>) &#8211; Find journal entries occuring on or after the specified time. Do not use if <code class="docutils literal"><span class="pre">date</span></code> is specified.</li>
 <li><strong>enddate</strong> (<em>date or datetime or None</em>) &#8211; Find journal entries occuring on or before the specified time. Do not use if <code class="docutils literal"><span class="pre">date</span></code> is specified.</li>
-<li><strong>max_entries</strong> (<em>int or None</em>) &#8211; Return at most the specified number of journal entries</li>
+<li><strong>max_journals</strong> (<em>int or None</em>) &#8211; Return at most the specified number of journal entries</li>
 </ul>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">a list of journal entries matching the specified critiera or <code class="docutils literal"><span class="pre">None</span></code> if an error is encountered</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list or none</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list or None</p>
 </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tradervue.tradervue.Tradervue.get_note">
+<code class="descname">get_note</code><span class="sig-paren">(</span><em>note_id</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.get_note" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get detailed information about the specified journal note ID.</p>
+<p>The dict returned from this method contains keys as defined in the <a class="reference external" href="https://github.com/tradervue/api-docs/blob/master/notes.md">Tradervue Journal Notes Documentation</a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">information on the specified journal note ID or <code class="docutils literal"><span class="pre">None</span></code> if an error occurs</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list or None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tradervue.tradervue.Tradervue.get_notes">
+<code class="descname">get_notes</code><span class="sig-paren">(</span><em>max_notes=25</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.get_notes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Query for journal notes.</p>
+<p>The list returned from this method contains dict objects which have fields as defined in the <a class="reference external" href="https://github.com/tradervue/api-docs/blob/master/notes.md">Tradervue Journal Notes Documentation</a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>max_notes</strong> (<em>int or None</em>) &#8211; Return at most the specified number of journal notes</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">a list of journal notes or <code class="docutils literal"><span class="pre">None</span></code> if an error is encountered</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list or None</td>
 </tr>
 </tbody>
 </table>
@@ -376,7 +427,7 @@
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">a list of trades matching the specified critiera or <code class="docutils literal"><span class="pre">None</span></code> if an error is encountered</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list or none</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list or None</p>
 </td>
 </tr>
 </tbody>
@@ -427,7 +478,7 @@
 
 <dl class="method">
 <dt id="tradervue.tradervue.Tradervue.import_executions">
-<code class="descname">import_executions</code><span class="sig-paren">(</span><em>executions</em>, <em>account_tag=None</em>, <em>tags=None</em>, <em>allow_duplicates=False</em>, <em>overlay_commissions=False</em>, <em>import_retries=3</em>, <em>wait_for_completion=False</em>, <em>wait_retries=3</em>, <em>secs_per_wait_retry=15</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.import_executions" title="Permalink to this definition">¶</a></dt>
+<code class="descname">import_executions</code><span class="sig-paren">(</span><em>executions</em>, <em>account_tag=None</em>, <em>tags=None</em>, <em>allow_duplicates=False</em>, <em>overlay_commissions=False</em>, <em>import_retries=3</em>, <em>wait_for_completion=False</em>, <em>wait_retries=5</em>, <em>secs_per_wait_retry=3</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.import_executions" title="Permalink to this definition">¶</a></dt>
 <dd><p>Import the specified trade executions.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -497,6 +548,32 @@
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><code class="docutils literal"><span class="pre">True</span></code> if the journal was updated successfully, <code class="docutils literal"><span class="pre">False</span></code> otherwise.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">bool</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tradervue.tradervue.Tradervue.update_note">
+<code class="descname">update_note</code><span class="sig-paren">(</span><em>note_id</em>, <em>notes=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.update_note" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update fields of the specified journal note ID.</p>
+<p>All arguments (other than <code class="docutils literal"><span class="pre">note_id</span></code>) to this method are optional. If not specified, that particular field won&#8217;t be modified.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>note_id</strong> (<em>str</em>) &#8211; The journal not ID to update.</li>
+<li><strong>notes</strong> (<em>str or None</em>) &#8211; <p>Any notes for the journal note entry. Can include <a class="reference external" href="https://daringfireball.net/projects/markdown/">Markdown</a> syntax.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><code class="docutils literal"><span class="pre">True</span></code> if the journal note was updated successfully, <code class="docutils literal"><span class="pre">False</span></code> otherwise.</p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">bool</p>
