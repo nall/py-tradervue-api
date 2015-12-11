@@ -46,7 +46,17 @@ import requests
 import sys
 import time
 
-from colorama import Fore, Back, Style
+try:
+  from colorama import Fore
+except ImportError:
+  class Fore:
+    RED =    ''
+    GREEN =  ''
+    YELLOW = ''
+    RESET =  ''
+
+def color_text(color, text):
+  return '%s%s%s' % (color, text, Fore.RESET)
 
 # Print logging messages with a nice severity and some color
 #
@@ -73,9 +83,6 @@ class TradervueLogFormatter(logging.Formatter):
 class Tradervue:
   """Here's some class stuff more
   """
-
-  def __color_text(self, color, text):
-    return '%s%s%s' % (color, text, Fore.RESET)
 
   def __init__(self, username, password, user_agent, target_user = None, baseurl = 'https://www.tradervue.com', verbose_http = False):
     """Construct a Tradervue instance.
@@ -119,19 +126,19 @@ class Tradervue:
       headers['Tradervue-UserId'] = self.target_user
 
     if self.verbose_http:
-      self.log.debug("%sREQUEST:  url     %s" % (Fore.GREEN, url))
-      self.log.debug("          headers %s" % (headers))
-      self.log.debug("          user    %s" % (auth[0]))
-      self.log.debug("          payload %s" % (payload))
-      self.log.debug("          params  %s" % (params))
+      self.log.debug(color_text(Fore.GREEN, "REQUEST:  url     %s" % (url)))
+      self.log.debug(color_text(Fore.GREEN, "          headers %s" % (headers)))
+      self.log.debug(color_text(Fore.GREEN, "          user    %s" % (auth[0])))
+      self.log.debug(color_text(Fore.GREEN, "          payload %s" % (payload)))
+      self.log.debug(color_text(Fore.GREEN, "          params  %s" % (params)))
 
     result = request_fn(url, headers = headers, auth = auth, data = payload, params = params)
 
     if self.verbose_http:
-      self.log.debug("RESPONSE: url     %s" % (result.url))
-      self.log.debug("          code    %s" % (result.status_code))
-      self.log.debug("          headers %s" % (result.headers))
-      self.log.debug("          body    %s%s" % (result.text, Fore.RESET))
+      self.log.debug(color_text(Fore.GREEN, "RESPONSE: url     %s" % (result.url)))
+      self.log.debug(color_text(Fore.GREEN, "          code    %s" % (result.status_code)))
+      self.log.debug(color_text(Fore.GREEN, "          headers %s" % (result.headers)))
+      self.log.debug(color_text(Fore.GREEN, "          body    %s" % (result.text)))
     return result
 
   def __handle_bad_http_response(self, r, msg, show_url = False):
@@ -167,10 +174,10 @@ class Tradervue:
 
     r = self.__delete(url, None)
     if r.status_code == 200:
-      self.log.debug("%s-DELETE[%s]: %s" % (key.upper(), object_id, self.__color_text(Fore.GREEN, 'SUCCESS')))
+      self.log.debug("%s-DELETE[%s]: %s" % (key.upper(), object_id, color_text(Fore.GREEN, 'SUCCESS')))
       return True
     else:
-      self.__handle_bad_http_response(r, "%s-DELETE[%s]: %s" % (key.upper(), object_id, self.__color_text(Fore.RED, 'FAILED')))
+      self.__handle_bad_http_response(r, "%s-DELETE[%s]: %s" % (key.upper(), object_id, color_text(Fore.RED, 'FAILED')))
       return False
 
   def __create_object(self, key, user_identifier, data, return_url):
@@ -178,14 +185,14 @@ class Tradervue:
 
     r = self.__post(url, data)
     if r.status_code == 201:
-      self.log.debug("%s-CREATE[%s]: %s" % (key.upper(), user_identifier, self.__color_text(Fore.GREEN, 'SUCCESS')))
+      self.log.debug("%s-CREATE[%s]: %s" % (key.upper(), user_identifier, color_text(Fore.GREEN, 'SUCCESS')))
       if return_url:
         return r.headers['Location']
       else:
         payload = json.loads(r.text)
         return payload['id']
     else:
-      self.__handle_bad_http_response(r, "%s-CREATE[%s]: %s" % (key.upper(), user_identifier, self.__color_text(Fore.RED, 'FAILED')))
+      self.__handle_bad_http_response(r, "%s-CREATE[%s]: %s" % (key.upper(), user_identifier, color_text(Fore.RED, 'FAILED')))
       return None
 
   def __update_object(self, key, object_id, data):
@@ -198,10 +205,10 @@ class Tradervue:
     url = '/'.join([self.baseurl, key, object_id])
     r = self.__put(url, data)
     if r.status_code == 200:
-      self.log.debug("%s-UPDATE[%s]: (%s) %s" % (key.upper(), object_id, ' '.join(data.keys()), self.__color_text(Fore.GREEN, 'SUCCESS')))
+      self.log.debug("%s-UPDATE[%s]: (%s) %s" % (key.upper(), object_id, ' '.join(data.keys()), color_text(Fore.GREEN, 'SUCCESS')))
       return True
     else:
-      self.__handle_bad_http_response(r, "%s-UPDATE[%s]: (%s) %s" % (key.upper(), object_id, ' '.join(data.keys()), self.__color_text(Fore.RED, 'FAILED')))
+      self.__handle_bad_http_response(r, "%s-UPDATE[%s]: (%s) %s" % (key.upper(), object_id, ' '.join(data.keys()), color_text(Fore.RED, 'FAILED')))
       return False
 
   def __get_objects(self, key, data, result_key = None, max_objects = 25):
@@ -241,7 +248,7 @@ class Tradervue:
 
     r = self.__get(url, data)
     if r.status_code == 200:
-      self.log.debug("%s-GET[%s]%s: %s" % (endpoint.upper(), object_id, f_debug_string, self.__color_text(Fore.GREEN, 'SUCCESS')))
+      self.log.debug("%s-GET[%s]%s: %s" % (endpoint.upper(), object_id, f_debug_string, color_text(Fore.GREEN, 'SUCCESS')))
       result = json.loads(r.text)
       if result_key is not None:
         if result_key not in result:
@@ -252,7 +259,7 @@ class Tradervue:
       else:
         return result
     else:
-      self.__handle_bad_http_response(r, "%s-GET[%s]%s: %s" % (endpoint.upper(), object_id, f_debug_string, self.__color_text(Fore.RED, 'FAILED')), show_url = True)
+      self.__handle_bad_http_response(r, "%s-GET[%s]%s: %s" % (endpoint.upper(), object_id, f_debug_string, color_text(Fore.RED, 'FAILED')), show_url = True)
       return None
 
   def create_trade(self, symbol, notes = None, initial_risk = None, shared = False, tags = [], return_url = False):
