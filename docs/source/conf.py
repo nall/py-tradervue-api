@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# py-tradervue documentation build configuration file, created by
+# py-tradervue-api documentation build configuration file, created by
 # sphinx-quickstart on Wed Dec  2 18:38:05 2015.
 #
 # This file is execfile()d with the current directory set to its
@@ -50,7 +50,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'py-tradervue'
+project = u'py-tradervue-api'
 copyright = u'2015, Jon Nall'
 author = u'Jon Nall'
 
@@ -226,7 +226,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  (master_doc, 'py-tradervue.tex', u'py-tradervue Documentation',
+  (master_doc, 'py-tradervue-api.tex', u'py-tradervue-api Documentation',
    u'Jon Nall', 'manual'),
 ]
 
@@ -256,7 +256,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'py-tradervue', u'py-tradervue Documentation',
+    (master_doc, 'py-tradervue-api', u'py-tradervue-api Documentation',
      [author], 1)
 ]
 
@@ -270,8 +270,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  (master_doc, 'py-tradervue', u'py-tradervue Documentation',
-   author, 'py-tradervue', 'One line description of project.',
+  (master_doc, 'py-tradervue-api', u'py-tradervue-api Documentation',
+   author, 'py-tradervue-api', 'One line description of project.',
    'Miscellaneous'),
 ]
 
