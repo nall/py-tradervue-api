@@ -295,7 +295,7 @@
 <li><strong>date</strong> (<em>date or datetime or None</em>) &#8211; Find journal entry for the specified date. If this argument is used, neither <code class="docutils literal"><span class="pre">startdate</span></code> nor <code class="docutils literal"><span class="pre">enddate</span></code> should be specified.</li>
 <li><strong>startdate</strong> (<em>date or datetime or None</em>) &#8211; Find journal entries occuring on or after the specified time. Do not use if <code class="docutils literal"><span class="pre">date</span></code> is specified.</li>
 <li><strong>enddate</strong> (<em>date or datetime or None</em>) &#8211; Find journal entries occuring on or before the specified time. Do not use if <code class="docutils literal"><span class="pre">date</span></code> is specified.</li>
-<li><strong>max_journals</strong> (<em>int or None</em>) &#8211; Return at most the specified number of journal entries</li>
+<li><strong>max_journals</strong> (<em>int or None</em>) &#8211; Return at most the specified number of journal entries. Specify <code class="docutils literal"><span class="pre">None</span></code> to return all journals</li>
 </ul>
 </td>
 </tr>
@@ -335,7 +335,7 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>max_notes</strong> (<em>int or None</em>) &#8211; Return at most the specified number of journal notes</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>max_notes</strong> (<em>int or None</em>) &#8211; Return at most the specified number of journal notes. Specify <code class="docutils literal"><span class="pre">None</span></code> to return all notes.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">a list of journal notes or <code class="docutils literal"><span class="pre">None</span></code> if an error is encountered</td>
 </tr>
@@ -420,7 +420,7 @@
 <li><strong>startdate</strong> (<em>date or datetime or None</em>) &#8211; Find trades occuring on or after the specified time</li>
 <li><strong>enddate</strong> (<em>date or datetime or None</em>) &#8211; Find trades occuring on or before the specified time</li>
 <li><strong>winners</strong> (<em>bool or None</em>) &#8211; Find trades where the P&amp;L is positive (or negative for a <code class="docutils literal"><span class="pre">False</span></code> value).</li>
-<li><strong>max_trades</strong> (<em>int or None</em>) &#8211; Return at most the specified number of trades</li>
+<li><strong>max_trades</strong> (<em>int or None</em>) &#8211; Return at most the specified number of trades. Specify <code class="docutils literal"><span class="pre">None</span></code> to return all trades.</li>
 </ul>
 </td>
 </tr>
