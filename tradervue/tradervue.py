@@ -216,10 +216,6 @@ class Tradervue:
     page = 0
     objects = []
     while True:
-      # We're done if we have the number of objects requested by the user
-      if max_objects is not None and len(objects) >= max_objects:
-        break
-
       page += 1
       data['page'] = page
       if max_objects is None:
@@ -233,15 +229,19 @@ class Tradervue:
         self.log.error("Found error condition when querying %s" % (data))
         return None
       elif len(cur_objects) == 0:
-        self.log.debug("No trades were found when querying %s" % (data))
+        self.log.debug("No objects were found when querying %s" % (data))
         break
       else:
         self.log.debug("%d object(s) were found when querying %s" % (len(cur_objects), data))
         objects.extend(cur_objects)
         # We ran out of data, so don't query again
-        if len(cur_objects) <= data['count']:
+        if len(cur_objects) < data['count']:
+          break
+        # We're done if we have the number of objects requested by the user
+        elif max_objects is not None and len(objects) >= max_objects:
           break
 
+    self.log.debug("Returning %d object(s) for %s" % (len(objects), key.upper()))
     return objects
 
 
