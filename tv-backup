@@ -7,6 +7,7 @@ import keyring
 import logging
 import os
 import sys
+import zipfile
 
 from tradervue.tradervue import TradervueLogFormatter, Tradervue
 
@@ -42,6 +43,7 @@ def parse_cmdline_args():
   parser.add_argument('action', type = str, choices = ['set_password', 'delete_password', 'backup'], help = 'The action to perform')
   parser.add_argument('--username', '-u', type = str, default = os.environ['USER'], help = 'Tradervue username if different from $USER (default: %(default)s)')
   parser.add_argument('--file', '-f', type = str, default="tv-backup.json", dest = 'backup_file', metavar = 'BACKUP_FILE', help = 'Write the result into the specified file')
+  parser.add_argument('--zip', '-z', action = 'store_true', help = 'Zip the resulting output file. No need to name it .zip to the --file argument.')
   parser.add_argument('--debug', action = 'store_true', help = 'Enable verbose debugging messages')
   parser.add_argument('--debug_http', action = 'store_true', help = 'Enable verbose HTTP request/response debugging messages')
 
@@ -111,7 +113,14 @@ def do_backup(credentials, args):
 
   with open(args.backup_file, 'w') as fh:
     json.dump(backup, fh, indent = 2)
-  LOG.info("Wrote backup file %s" % (args.backup_file))
+
+  if args.zip:
+    with zipfile.ZipFile('%s.zip' % (args.backup_file), 'w') as zfh:
+        zfh.write(args.backup_file)
+    os.remove(args.backup_file)
+    LOG.info("Wrote backup file %s.zip" % (args.backup_file))
+  else:
+    LOG.info("Wrote backup file %s" % (args.backup_file))
 
 def main(argv):
   args = parse_cmdline_args()
