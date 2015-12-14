@@ -212,15 +212,22 @@ class Tradervue:
       return False
 
   def __get_objects(self, key, data, result_key = None, max_objects = 25):
-    total_pages = 1
-    if max_objects > 100:
-      total_pages = int(math.ceil(max_objects / 100.0))
 
+    page = 0
     objects = []
-    for page in range(1, total_pages + 1):
-      objects_left = max_objects - len(objects)
+    while True:
+      # We're done if we have the number of objects requested by the user
+      if max_objects is not None and len(objects) >= max_objects:
+        break
+
+      page += 1
       data['page'] = page
-      data['count'] = 100 if objects_left >= 100 else objects_left
+      if max_objects is None:
+        data['count'] = 100
+      else:
+        data['count'] = max_objects - len(objects)
+        data['count'] = 100 if data['count'] >= 100 else data['count']
+
       cur_objects = self.__get_object(key, None, None, result_key, data)
       if cur_objects is None:
         self.log.error("Found error condition when querying %s" % (data))
@@ -231,6 +238,9 @@ class Tradervue:
       else:
         self.log.debug("%d object(s) were found when querying %s" % (len(cur_objects), data))
         objects.extend(cur_objects)
+        # We ran out of data, so don't query again
+        if len(cur_objects) <= data['count']:
+          break
 
     return objects
 
@@ -306,7 +316,7 @@ class Tradervue:
        :param startdate: Find trades occuring on or after the specified time
        :param enddate: Find trades occuring on or before the specified time
        :param winners: Find trades where the P&L is positive (or negative for a ``False`` value).
-       :param max_trades: Return at most the specified number of trades
+       :param max_trades: Return at most the specified number of trades. Specify ``None`` to return all trades.
        :type symbol: str or None
        :type tag_expr: str or None
        :type side: str or None
@@ -609,7 +619,7 @@ class Tradervue:
        :param date: Find journal entry for the specified date. If this argument is used, neither ``startdate`` nor ``enddate`` should be specified.
        :param startdate: Find journal entries occuring on or after the specified time. Do not use if ``date`` is specified.
        :param enddate: Find journal entries occuring on or before the specified time. Do not use if ``date`` is specified.
-       :param max_journals: Return at most the specified number of journal entries
+       :param max_journals: Return at most the specified number of journal entries. Specify ``None`` to return all journals
        :type date: date or datetime or None
        :type startdate: date or datetime or None
        :type enddate: date or datetime or None
@@ -699,7 +709,7 @@ class Tradervue:
 
        The list returned from this method contains dict objects which have fields as defined in the `Tradervue Journal Notes Documentation <https://github.com/tradervue/api-docs/blob/master/notes.md>`_.
 
-       :param max_notes: Return at most the specified number of journal notes
+       :param max_notes: Return at most the specified number of journal notes. Specify ``None`` to return all notes.
        :type max_notes: int or None
        :return: a list of journal notes or ``None`` if an error is encountered
        :rtype: list or None
