@@ -1,0 +1,139 @@
+#!/usr/bin/env python
+# vim:ft=python shiftwidth=2 tabstop=2 expandtab
+import argparse
+import getpass
+import json
+import keyring
+import logging
+import os
+import sys
+
+from tradervue.tradervue import TradervueLogFormatter, Tradervue
+
+LOG = None
+TRADERVUE_KEYRING_NAME = 'tradervue'
+TRADERVUE_USERAGENT = 'tv-backup (jon.nall@gmail.com)'
+
+class ErrorCountingHandler(logging.NullHandler):
+  ERROR_COUNT = 0
+  def handle(self, record):
+    if record.levelno >= logging.ERROR:
+      ErrorCountingHandler.ERROR_COUNT += 1
+
+  @staticmethod
+  def error_count():
+    return ErrorCountingHandler.ERROR_COUNT
+
+def setup_logging(debug = False):
+  global LOG
+  LOG = logging.getLogger()
+  LOG.setLevel(logging.DEBUG if debug else logging.INFO)
+  console = logging.StreamHandler()
+  console.setFormatter(TradervueLogFormatter())
+  LOG.addHandler(console)
+  LOG.addHandler(ErrorCountingHandler())
+
+  # Turn off stupid INFO messages from requests lib
+  if not debug:
+    logging.getLogger('urllib3').setLevel(logging.WARNING)
+
+def parse_cmdline_args():
+  parser = argparse.ArgumentParser(description='Tradervue backup utility')
+  parser.add_argument('action', type = str, choices = ['set_password', 'delete_password', 'backup'], help = 'The action to perform')
+  parser.add_argument('--username', '-u', type = str, default = os.environ['USER'], help = 'Tradervue username if different from $USER (default: %(default)s)')
+  parser.add_argument('--file', '-f', type = str, default="tv-backup.json", dest = 'backup_file', metavar = 'BACKUP_FILE', help = 'Write the result into the specified file')
+  parser.add_argument('--debug', action = 'store_true', help = 'Enable verbose debugging messages')
+  parser.add_argument('--debug_http', action = 'store_true', help = 'Enable verbose HTTP request/response debugging messages')
+
+  args = parser.parse_args()
+
+  if args.debug_http:
+    args.debug = True
+  return args
+
+def delete_password(username):
+  LOG.info("Deleting keyring password for %s." % (username))
+  try:
+    keyring.delete_password(TRADERVUE_KEYRING_NAME, username)
+  except keyring.errors.PasswordDeleteError as e:
+    LOG.error("Unable to delete password for Tradervue username '%s': %s" % (username, e))
+    return False
+  return True
+
+def set_password(username):
+  LOG.info("Adding password for %s to keyring." % (username))
+  p = getpass.getpass('Tradervue password: ')
+
+  try:
+    keyring.set_password(TRADERVUE_KEYRING_NAME, username, p)
+  except keyring.errors.PasswordSetError as e:
+    LOG.error("Unable to set password for Tradervue username '%s': %s'" % (username, e))
+    return False
+  return True
+
+def get_credentials(args):
+  username = args.username
+  password = keyring.get_password(TRADERVUE_KEYRING_NAME, username)
+  if password == None:
+    LOG.error("No password found for Tradervue username '%s'. Rerun with set_password to set a password. See --help for help")
+    return None
+
+  return (username, password) 
+
+def do_backup(credentials, args):
+  tv = Tradervue(credentials[0], credentials[1], TRADERVUE_USERAGENT, verbose_http = args.debug_http)
+  
+  backup = {}
+  LOG.info("Downloading journals...")
+  backup['journals'] = tv.get_journals(max_journals = None)
+  LOG.debug("Downloaded %d journals...", len(backup['journals']))
+  LOG.info("Downloading notes...")
+  backup['notes'] = tv.get_notes(max_notes = None)
+  LOG.debug("Downloaded %d notes...", len(backup['notes']))
+  tmp_trades = tv.get_trades(max_trades = None)
+  backup['trades'] = []
+  LOG.info("Downloading %d trades..." % (len(tmp_trades)))
+  for tmp in tmp_trades:
+    t = tv.get_trade(tmp['id'])
+    if t is not None:
+      if int(t['exec_count']) > 0:
+        e = tv.get_trade_executions(t['id'])
+        if e is not None:
+          t['executions'] = e
+      if int(t['comment_count']) > 0:
+        c = tv.get_trade_comments(t['id'])
+        if c is not None:
+          t['comments'] = c
+      backup['trades'].append(t)
+    else:
+      LOG.error("Unable to download trade ID %s" % (tmp['id'])) 
+  LOG.debug("Downloaded %d trades..." % (len(backup['trades'])))
+
+  with open(args.backup_file, 'w') as fh:
+    json.dump(backup, fh, indent = 2)
+  LOG.info("Wrote backup file %s" % (args.backup_file))
+
+def main(argv):
+  args = parse_cmdline_args()
+  setup_logging(args.debug)
+
+  if args.action == 'delete_password':
+    return 0 if delete_password(args.username) else False
+  elif args.action == 'set_password':
+    return 0 if set_password(args.username) else False
+
+  # The rest of this assumes import
+  assert args.action == 'backup', "Invalid action '%s' specified" % (args.action)
+  credentials = get_credentials(args)
+  if credentials is None:
+    LOG.error("Unable to determine Tradervue credentials. Exiting.")
+    return 1
+
+  do_backup(credentials, args)
+
+if __name__ == "__main__":
+  rc = main(sys.argv)
+  if rc == 0 or not isinstance(rc, int):
+    if ErrorCountingHandler.error_count() > 0:
+      rc = 1
+  sys.exit(rc)
