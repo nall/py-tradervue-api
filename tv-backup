@@ -6,9 +6,11 @@ import json
 import keyring
 import logging
 import os
+import shutil
 import sys
 import zipfile
 
+from datetime import datetime
 from tradervue.tradervue import TradervueLogFormatter, Tradervue
 
 LOG = None
@@ -17,19 +19,25 @@ TRADERVUE_USERAGENT = 'tv-backup (jon.nall@gmail.com)'
 
 class ErrorCountingHandler(logging.NullHandler):
   ERROR_COUNT = 0
+  ERROR_TEXT = ''
   def handle(self, record):
     if record.levelno >= logging.ERROR:
       ErrorCountingHandler.ERROR_COUNT += 1
+      ErrorCountingHandler.ERROR_TEXT += record.msg + "\n"
 
   @staticmethod
   def error_count():
     return ErrorCountingHandler.ERROR_COUNT
 
+  @staticmethod
+  def error_text():
+    return ErrorCountingHandler.ERROR_TEXT
+
 def setup_logging(debug = False):
   global LOG
   LOG = logging.getLogger()
   LOG.setLevel(logging.DEBUG if debug else logging.INFO)
-  console = logging.StreamHandler()
+  console = logging.StreamHandler(sys.stdout)
   console.setFormatter(TradervueLogFormatter())
   LOG.addHandler(console)
   LOG.addHandler(ErrorCountingHandler())
@@ -39,10 +47,17 @@ def setup_logging(debug = False):
     logging.getLogger('urllib3').setLevel(logging.WARNING)
 
 def parse_cmdline_args():
+  user = None
+  for key in ['USER', 'LOGNAME']:
+    if key in os.environ:
+      user = os.environ[key]
+      break
+
   parser = argparse.ArgumentParser(description='Tradervue backup utility')
   parser.add_argument('action', type = str, choices = ['set_password', 'delete_password', 'backup'], help = 'The action to perform')
-  parser.add_argument('--username', '-u', type = str, default = os.environ['USER'], help = 'Tradervue username if different from $USER (default: %(default)s)')
-  parser.add_argument('--file', '-f', type = str, default="tv-backup.json", dest = 'backup_file', metavar = 'BACKUP_FILE', help = 'Write the result into the specified file')
+  parser.add_argument('--username', '-u', type = str, default = user, help = 'Tradervue username if different from $USER (default: %(default)s)')
+  parser.add_argument('--dir', '-d', type = str, help = 'Write the result into the specified directory')
+  parser.add_argument('--file', '-f', type = str, default=datetime.now().strftime("%Y%m%d_%H%M%S.tradervue.json"), dest = 'backup_file', metavar = 'BACKUP_FILE', help = 'Write the result into the specified file')
   parser.add_argument('--zip', '-z', action = 'store_true', help = 'Zip the resulting output file. No need to name it .zip to the --file argument.')
   parser.add_argument('--debug', action = 'store_true', help = 'Enable verbose debugging messages')
   parser.add_argument('--debug_http', action = 'store_true', help = 'Enable verbose HTTP request/response debugging messages')
@@ -114,13 +129,18 @@ def do_backup(credentials, args):
   with open(args.backup_file, 'w') as fh:
     json.dump(backup, fh, indent = 2)
 
+  result = args.backup_file
   if args.zip:
-    with zipfile.ZipFile('%s.zip' % (args.backup_file), 'w') as zfh:
+    result = '%s.zip' % (args.backup_file)
+    with zipfile.ZipFile(result, 'w') as zfh:
         zfh.write(args.backup_file)
     os.remove(args.backup_file)
-    LOG.info("Wrote backup file %s.zip" % (args.backup_file))
-  else:
-    LOG.info("Wrote backup file %s" % (args.backup_file))
+    if args.dir:
+      final_result = os.path.join(args.dir, result) 
+      shutil.move(result, final_result)
+      result = final_result
+
+  LOG.info("Wrote backup file %s" % (result))
 
 def main(argv):
   args = parse_cmdline_args()
@@ -139,10 +159,13 @@ def main(argv):
     return 1
 
   do_backup(credentials, args)
+  return 0
 
 if __name__ == "__main__":
   rc = main(sys.argv)
   if rc == 0 or not isinstance(rc, int):
     if ErrorCountingHandler.error_count() > 0:
       rc = 1
+  if rc != 0:
+    sys.stderr.write("Found errors while running backup:\n%s" % (ErrorCountingHandler.error_text()))
   sys.exit(rc)
