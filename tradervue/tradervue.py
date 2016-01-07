@@ -302,7 +302,7 @@ class Tradervue:
     """
     return self.__delete_object('trades', trade_id)
 
-  def get_trades(self, symbol = None, tag_expr = None, side = None, duration = None, startdate = None, enddate = None, winners = None, max_trades = 25):
+  def get_trades(self, symbol = None, tag_expr = None, side = None, duration = None, startdate = None, enddate = None, winners = None, include_comments = False, include_executions = False, max_trades = 25):
     """Query for trades matching the specified criteria.
 
        All arguments to this method are optional. If not specified, they are not part of the query. 
@@ -316,6 +316,8 @@ class Tradervue:
        :param startdate: Find trades occuring on or after the specified time
        :param enddate: Find trades occuring on or before the specified time
        :param winners: Find trades where the P&L is positive (or negative for a ``False`` value).
+       :param bool include_comments: If there are comments associated with the trade, include them in the results (the ``comments`` key will be a list of comments)
+       :param bool include_executions: If there are executions associated with the trade, include them in the results (the ``executions`` key will be a list of comments)
        :param max_trades: Return at most the specified number of trades. Specify ``None`` to return all trades.
        :type symbol: str or None
        :type tag_expr: str or None
@@ -357,6 +359,13 @@ class Tradervue:
 
     all_trades = self.__get_objects('trades', data, 'trades', max_trades)
 
+    if include_comments or include_executions:
+      for trade in all_trades:
+        if include_comments and int(trade['comment_count']) > 0:
+          trade['comments'] = self.get_trade_comments(trade['id'])
+        if include_executions and int(trade['exec_count']) > 0:
+          trade['executions'] = self.get_trade_executions(trade['id'])
+
     if tag_warning_on_no_results and len(all_trades) == 0:
       self.log.warning("No results found for dubious tag expression '%s'. Make sure AND and OR are upper" % (tag_expr))
 
@@ -387,7 +396,7 @@ class Tradervue:
   def get_trade_comments(self, trade_id):
     """Get detailed information about the comments of the specified trade ID.
 
-       The dict returned from this method contains keys as defined in the `Tradervue Trade Documentation <https://github.com/tradervue/api-docs/blob/master/trades.md>`_.
+       The dict returned from this method contains keys as defined in the `Tradervue Comments Documentation <https://github.com/tradervue/api-docs/blob/master/comments.md>`_.
 
        :param str trade_id: The trade ID to query.
        :return: a dict containing information about the comments for trade ID or ``None`` on error.
@@ -609,7 +618,7 @@ class Tradervue:
 
     return self.__create_object('users', username, data, return_url)
 
-  def get_journals(self, date = None, startdate = None, enddate = None, max_journals = 25):
+  def get_journals(self, date = None, startdate = None, enddate = None, include_comments = False, max_journals = 25):
     """Query for journal entries matching the specified criteria.
 
        All arguments to this method are optional. If not specified, they are not part of the query. 
@@ -619,6 +628,7 @@ class Tradervue:
        :param date: Find journal entry for the specified date. If this argument is used, neither ``startdate`` nor ``enddate`` should be specified.
        :param startdate: Find journal entries occuring on or after the specified time. Do not use if ``date`` is specified.
        :param enddate: Find journal entries occuring on or before the specified time. Do not use if ``date`` is specified.
+       :param bool include_comments: If there are comments associated with the journal entry, include them in the results (the ``comments`` key will be a list of comments)
        :param max_journals: Return at most the specified number of journal entries. Specify ``None`` to return all journals
        :type date: date or datetime or None
        :type startdate: date or datetime or None
@@ -635,7 +645,14 @@ class Tradervue:
     if startdate is not None: data['startdate'] = startdate.strftime('%m/%d/%Y')
     if enddate is not None: data['enddate'] = enddate.strftime('%m/%d/%Y')
 
-    return self.__get_objects('journal', data, 'journal_entries', max_journals)
+    all_journals = self.__get_objects('journal', data, 'journal_entries', max_journals)
+
+    if include_comments:
+      for journal in all_journals:
+        if int(journal['comment_count']) > 0:
+          journal['comments'] = self.get_journal_comments(journal['id'])
+
+    return all_journals
 
   def get_journal(self, journal_id = None, date = None):
     """Get detailed information about the specified journal ID (or the journal on the specified date). Exactly one of ``journal_id`` or ``date`` must be specified.
@@ -662,6 +679,17 @@ class Tradervue:
         return None
       else:
         return self.get_journal(journals[0]['id'])
+
+  def get_journal_comments(self, journal_id):
+    """Get detailed information about the comments of the specified journal entry ID.
+
+       The dict returned from this method contains keys as defined in the `Tradervue Comments Documentation <https://github.com/tradervue/api-docs/blob/master/comments.md>`_.
+
+       :param str journal_id: The journal entry ID to query.
+       :return: a dict containing information about the comments for journal ID or ``None`` on error.
+       :rtype: dict or None
+    """
+    return self.__get_object('journal', ['comments'], journal_id, 'comments')
 
   def update_journal(self, journal_id, notes = None):
     """Update fields of the specified journal ID.
@@ -704,17 +732,25 @@ class Tradervue:
     """
     return self.__delete_object('journal', journal_id)
 
-  def get_notes(self, max_notes = 25):
+  def get_notes(self, include_comments = False, max_notes = 25):
     """Query for journal notes.
 
        The list returned from this method contains dict objects which have fields as defined in the `Tradervue Journal Notes Documentation <https://github.com/tradervue/api-docs/blob/master/notes.md>`_.
 
+       :param bool include_comments: If there are comments associated with the note, include them in the results (the ``comments`` key will be a list of comments)
        :param max_notes: Return at most the specified number of journal notes. Specify ``None`` to return all notes.
        :type max_notes: int or None
        :return: a list of journal notes or ``None`` if an error is encountered
        :rtype: list or None
     """
-    return self.__get_objects('notes', {}, 'journal_notes', max_notes)
+    all_notes = self.__get_objects('notes', {}, 'journal_notes', max_notes)
+
+    if include_comments:
+      for note in all_notes:
+        if int(note['comment_count']) > 0:
+          note['comments'] = self.get_note_comments(note['id'])
+
+    return all_notes
 
   def get_note(self, note_id):
     """Get detailed information about the specified journal note ID.
@@ -725,6 +761,17 @@ class Tradervue:
        :rtype: list or None
     """
     return self.__get_object('notes', None, note_id)
+
+  def get_note_comments(self, note_id):
+    """Get detailed information about the comments of the specified note ID.
+
+       The dict returned from this method contains keys as defined in the `Tradervue Comments Documentation <https://github.com/tradervue/api-docs/blob/master/comments.md>`_.
+
+       :param str note_id: The note ID to query.
+       :return: a dict containing information about the comments for note ID or ``None`` on error.
+       :rtype: dict or None
+    """
+    return self.__get_object('notes', ['comments'], note_id, 'comments')
 
   def update_note(self, note_id, notes = None):
     """Update fields of the specified journal note ID.
