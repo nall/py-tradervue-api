@@ -332,14 +332,7 @@ class Tradervue:
     """
     data = { }
     if symbol is not None: data['symbol'] = symbol
-
-    tag_warning_on_no_results = False
-    if tag_expr is not None:
-      if re.search(r'\sand\s', tag_expr) or re.search(r'\sor\s', tag_expr):
-        # Dubious expression -- used and/or, but not upper which is required
-        # If we don't return results, warn the user
-        tag_warning_on_no_results = True
-      data['tag'] = tag_expr
+    if tag_expr is not None: data['tag'] = tag_expr
 
     if side is not None:
       if not re.match(r'^(long|short)$', side, re.IGNORECASE):
@@ -365,9 +358,6 @@ class Tradervue:
           trade['comments'] = self.get_trade_comments(trade['id'])
         if include_executions and int(trade['exec_count']) > 0:
           trade['executions'] = self.get_trade_executions(trade['id'])
-
-    if tag_warning_on_no_results and len(all_trades) == 0:
-      self.log.warning("No results found for dubious tag expression '%s'. Make sure AND and OR are upper" % (tag_expr))
 
     return all_trades
 
