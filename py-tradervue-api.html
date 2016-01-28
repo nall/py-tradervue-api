@@ -302,7 +302,7 @@
 
 <dl class="method">
 <dt id="tradervue.tradervue.Tradervue.get_journals">
-<code class="descname">get_journals</code><span class="sig-paren">(</span><em>date=None</em>, <em>startdate=None</em>, <em>enddate=None</em>, <em>include_comments=False</em>, <em>max_journals=25</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.get_journals" title="Permalink to this definition">¶</a></dt>
+<code class="descname">get_journals</code><span class="sig-paren">(</span><em>date=None</em>, <em>startdate=None</em>, <em>enddate=None</em>, <em>include_comments=False</em>, <em>max_journals=25</em>, <em>offset=0</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.get_journals" title="Permalink to this definition">¶</a></dt>
 <dd><p>Query for journal entries matching the specified criteria.</p>
 <p>All arguments to this method are optional. If not specified, they are not part of the query.</p>
 <p>The list returned from this method contains dict objects which have fields as defined in the <a class="reference external" href="https://github.com/tradervue/api-docs/blob/master/journal.md">Tradervue Journal Documentation</a>.</p>
@@ -315,7 +315,8 @@
 <li><strong>startdate</strong> (<em>date or datetime or None</em>) &#8211; Find journal entries occuring on or after the specified time. Do not use if <code class="docutils literal"><span class="pre">date</span></code> is specified.</li>
 <li><strong>enddate</strong> (<em>date or datetime or None</em>) &#8211; Find journal entries occuring on or before the specified time. Do not use if <code class="docutils literal"><span class="pre">date</span></code> is specified.</li>
 <li><strong>include_comments</strong> (<em>bool</em>) &#8211; If there are comments associated with the journal entry, include them in the results (the <code class="docutils literal"><span class="pre">comments</span></code> key will be a list of comments)</li>
-<li><strong>max_journals</strong> (<em>int or None</em>) &#8211; Return at most the specified number of journal entries. Specify <code class="docutils literal"><span class="pre">None</span></code> to return all journals</li>
+<li><strong>max_journals</strong> (<em>int</em>) &#8211; Return at most the specified number of journal entries.</li>
+<li><strong>offset</strong> (<em>int</em>) &#8211; Returns journal entries starting at the specified offset. Entries are returned newest first, so this can be used to query older entries.</li>
 </ul>
 </td>
 </tr>
@@ -367,7 +368,7 @@
 
 <dl class="method">
 <dt id="tradervue.tradervue.Tradervue.get_notes">
-<code class="descname">get_notes</code><span class="sig-paren">(</span><em>include_comments=False</em>, <em>max_notes=25</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.get_notes" title="Permalink to this definition">¶</a></dt>
+<code class="descname">get_notes</code><span class="sig-paren">(</span><em>include_comments=False</em>, <em>max_notes=25</em>, <em>offset=0</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.get_notes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Query for journal notes.</p>
 <p>The list returned from this method contains dict objects which have fields as defined in the <a class="reference external" href="https://github.com/tradervue/api-docs/blob/master/notes.md">Tradervue Journal Notes Documentation</a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -376,7 +377,8 @@
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>include_comments</strong> (<em>bool</em>) &#8211; If there are comments associated with the note, include them in the results (the <code class="docutils literal"><span class="pre">comments</span></code> key will be a list of comments)</li>
-<li><strong>max_notes</strong> (<em>int or None</em>) &#8211; Return at most the specified number of journal notes. Specify <code class="docutils literal"><span class="pre">None</span></code> to return all notes.</li>
+<li><strong>max_notes</strong> (<em>int</em>) &#8211; Return at most the specified number of journal notes. Specify <code class="docutils literal"><span class="pre">None</span></code> to return all notes.</li>
+<li><strong>offset</strong> (<em>int</em>) &#8211; Returns notes starting at the specified offset. Notes are returned newest first, so this can be used to query older notes.</li>
 </ul>
 </td>
 </tr>
@@ -449,7 +451,7 @@
 
 <dl class="method">
 <dt id="tradervue.tradervue.Tradervue.get_trades">
-<code class="descname">get_trades</code><span class="sig-paren">(</span><em>symbol=None</em>, <em>tag_expr=None</em>, <em>side=None</em>, <em>duration=None</em>, <em>startdate=None</em>, <em>enddate=None</em>, <em>winners=None</em>, <em>include_comments=False</em>, <em>include_executions=False</em>, <em>max_trades=25</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.get_trades" title="Permalink to this definition">¶</a></dt>
+<code class="descname">get_trades</code><span class="sig-paren">(</span><em>symbol=None</em>, <em>tag_expr=None</em>, <em>side=None</em>, <em>duration=None</em>, <em>startdate=None</em>, <em>enddate=None</em>, <em>winners=None</em>, <em>include_comments=False</em>, <em>include_executions=False</em>, <em>max_trades=25</em>, <em>offset=0</em><span class="sig-paren">)</span><a class="headerlink" href="#tradervue.tradervue.Tradervue.get_trades" title="Permalink to this definition">¶</a></dt>
 <dd><p>Query for trades matching the specified criteria.</p>
 <p>All arguments to this method are optional. If not specified, they are not part of the query.</p>
 <p>The list returned from this method contains dict objects which have fields as defined in the <a class="reference external" href="https://github.com/tradervue/api-docs/blob/master/trades.md">Tradervue Trade Documentation</a>.</p>
@@ -467,7 +469,8 @@
 <li><strong>winners</strong> (<em>bool or None</em>) &#8211; Find trades where the P&amp;L is positive (or negative for a <code class="docutils literal"><span class="pre">False</span></code> value).</li>
 <li><strong>include_comments</strong> (<em>bool</em>) &#8211; If there are comments associated with the trade, include them in the results (the <code class="docutils literal"><span class="pre">comments</span></code> key will be a list of comments)</li>
 <li><strong>include_executions</strong> (<em>bool</em>) &#8211; If there are executions associated with the trade, include them in the results (the <code class="docutils literal"><span class="pre">executions</span></code> key will be a list of comments)</li>
-<li><strong>max_trades</strong> (<em>int or None</em>) &#8211; Return at most the specified number of trades. Specify <code class="docutils literal"><span class="pre">None</span></code> to return all trades.</li>
+<li><strong>max_trades</strong> (<em>int</em>) &#8211; Return at most the specified number of trades. The maximum value here is determined by <code class="docutils literal"><span class="pre">Tradervue.MAX_ALLOWED_OBJECT_REQUEST</span></code></li>
+<li><strong>offset</strong> (<em>int</em>) &#8211; Returns trades starting at the specified offset. Trades are returned newest first, so this can be used to query older trades.</li>
 </ul>
 </td>
 </tr>
