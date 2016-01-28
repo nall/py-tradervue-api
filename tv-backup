@@ -100,16 +100,29 @@ def get_credentials(args):
 def do_backup(credentials, args):
   tv = Tradervue(credentials[0], credentials[1], TRADERVUE_USERAGENT, verbose_http = args.debug_http)
   
-  backup = {}
+  backup = {'journals': [], 'notes': [], 'trades': []}
+
   LOG.info("Downloading journals...")
-  backup['journals'] = tv.get_journals(max_journals = None)
-  LOG.debug("Downloaded %d journals...", len(backup['journals']))
+  tmp = tv.get_journals(max_journals = Tradervue.MAX_ALLOWED_OBJECT_REQUEST)
+  while len(tmp) > 0:
+    backup['journals'].extend(tmp)
+    tmp = tv.get_journals(max_journals = Tradervue.MAX_ALLOWED_OBJECT_REQUEST, offset = len(backup['journals']))
+  LOG.info("Downloaded %d journals..." % len(backup['journals']))
+
   LOG.info("Downloading notes...")
-  backup['notes'] = tv.get_notes(max_notes = None)
-  LOG.debug("Downloaded %d notes...", len(backup['notes']))
-  tmp_trades = tv.get_trades(max_trades = None)
-  backup['trades'] = []
-  LOG.info("Downloading %d trades..." % (len(tmp_trades)))
+  tmp = tv.get_notes(max_notes = Tradervue.MAX_ALLOWED_OBJECT_REQUEST)
+  while len(tmp) > 0:
+    backup['notes'].extend(tmp)
+    tmp = tv.get_notes(max_notes = Tradervue.MAX_ALLOWED_OBJECT_REQUEST, offset = len(backup['notes']))
+  LOG.info("Downloaded %d notes..." % len(backup['notes']))
+
+  LOG.info("Downloading trades...")
+  tmp = tv.get_trades(max_trades = Tradervue.MAX_ALLOWED_OBJECT_REQUEST)
+  tmp_trades = []
+  while len(tmp) > 0:
+    tmp_trades.extend(tmp)
+    tmp = tv.get_trades(max_trades = Tradervue.MAX_ALLOWED_OBJECT_REQUEST, offset = len(tmp_trades))
+    
   for tmp in tmp_trades:
     t = tv.get_trade(tmp['id'])
     if t is not None:
@@ -124,7 +137,7 @@ def do_backup(credentials, args):
       backup['trades'].append(t)
     else:
       LOG.error("Unable to download trade ID %s" % (tmp['id'])) 
-  LOG.debug("Downloaded %d trades..." % (len(backup['trades'])))
+  LOG.info("Downloaded %d trades..." % (len(backup['trades'])))
 
   with open(args.backup_file, 'w') as fh:
     json.dump(backup, fh, indent = 2)
