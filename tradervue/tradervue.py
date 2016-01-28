@@ -84,6 +84,10 @@ class Tradervue:
   """Here's some class stuff more
   """
 
+  """Specifies the maximum value of any max_* argument to the get_* API calls. Default is 500
+  """
+  MAX_ALLOWED_OBJECT_REQUEST = 500
+
   def __init__(self, username, password, user_agent, target_user = None, baseurl = 'https://www.tradervue.com', verbose_http = False):
     """Construct a Tradervue instance.
 
@@ -211,41 +215,66 @@ class Tradervue:
       self.__handle_bad_http_response(r, "%s-UPDATE[%s]: (%s) %s" % (key.upper(), object_id, ' '.join(data.keys()), color_text(Fore.RED, 'FAILED')))
       return False
 
-  def __get_objects(self, key, data, result_key = None, max_objects = 25):
+  def __get_objects(self, key, data, result_key = None, max_objects = 25, object_offset = 0):
+    MAX_OBJECTS_PER_REQUEST = 100
 
-    page = 0
-    objects = []
+    max_objects = int(max_objects) # Check for valid value and not None
+
+    if max_objects > Tradervue.MAX_ALLOWED_OBJECT_REQUEST:
+      raise ValueError("API doesn't allow more than %d objects to be returned from one call. Consider using the offset argument to get_%s()" % (Tradervue.MAX_ALLOWED_OBJECT_REQUEST, key))
+
+    # these represent the list slice we want from the resulting response
+    start_index = int(object_offset % MAX_OBJECTS_PER_REQUEST)
+    end_index = None
+
+    # Try to request as few as possible (max_objects), but we have to request the max if:
+    #    * the user wants more than a page worth
+    #    * the user request straddles a page
+    if (start_index + max_objects) > MAX_OBJECTS_PER_REQUEST or max_objects > MAX_OBJECTS_PER_REQUEST:
+      data['count'] = MAX_OBJECTS_PER_REQUEST
+    else:
+      data['count'] = max_objects
+
+    # Just determine the page offset to request
+    data['page'] = int(math.floor((object_offset / MAX_OBJECTS_PER_REQUEST)))
+
+    objects = [] # Results returned to user
+
+    # Just keep requesting more objects until one of the following:
+    #   * the array returned from __get_object is None (this is an error)
+    #   * the length of the array returned from __get_object is 0 (no more available)
+    #   * the length of the array is less than what we requested (no more available)
+    #   * we get the number of requested items
     while True:
-      page += 1
-      data['page'] = page
-      if max_objects is None:
-        data['count'] = 100
-      else:
-        data['count'] = max_objects - len(objects)
-        data['count'] = 100 if data['count'] >= 100 else data['count']
+      data['page'] += 1
 
-      cur_objects = self.__get_object(key, None, None, result_key, data)
+      if start_index == 0 and (max_objects - len(objects)) < MAX_OBJECTS_PER_REQUEST:
+        end_index = max_objects - len(objects)
+
+      cur_objects = self.__get_object(key, None, None, result_key, data, start_index, end_index)
       if cur_objects is None:
         self.log.error("Found error condition when querying %s" % (data))
         return None
       elif len(cur_objects) == 0:
-        self.log.debug("No objects were found when querying %s" % (data))
+        self.log.debug("No objects were found when querying %s [%s:%s]" % (data, start_index, end_index))
         break
       else:
-        self.log.debug("%d object(s) were found when querying %s" % (len(cur_objects), data))
+        self.log.debug("%d object(s) were found when querying %s [%s:%s]" % (len(cur_objects), data, start_index, end_index))
         objects.extend(cur_objects)
         # We ran out of data, so don't query again
-        if len(cur_objects) < data['count']:
+        if len(cur_objects) < data['count'] and start_index == 0:
           break
         # We're done if we have the number of objects requested by the user
-        elif max_objects is not None and len(objects) >= max_objects:
+        elif len(objects) >= max_objects:
           break
+
+      start_index = 0 # This is only ever non-zero for the first iteration
 
     self.log.debug("Returning %d object(s) for %s" % (len(objects), key.upper()))
     return objects
 
 
-  def __get_object(self, endpoint, fragments, object_id, result_key = None, data = None):
+  def __get_object(self, endpoint, fragments, object_id, result_key = None, data = None, start_index = 0, end_index = None):
 
     if fragments is None: fragments = []
 
@@ -265,9 +294,9 @@ class Tradervue:
           self.log.error("Unable to find '%s' key in %s results: %s" % (result_key, endpoint, r.text))
           return None
         else:
-          return result[result_key]
+          return result[result_key][start_index:end_index]
       else:
-        return result
+        return result[start_index:end_index]
     else:
       self.__handle_bad_http_response(r, "%s-GET[%s]%s: %s" % (endpoint.upper(), object_id, f_debug_string, color_text(Fore.RED, 'FAILED')), show_url = True)
       return None
@@ -302,7 +331,7 @@ class Tradervue:
     """
     return self.__delete_object('trades', trade_id)
 
-  def get_trades(self, symbol = None, tag_expr = None, side = None, duration = None, startdate = None, enddate = None, winners = None, include_comments = False, include_executions = False, max_trades = 25):
+  def get_trades(self, symbol = None, tag_expr = None, side = None, duration = None, startdate = None, enddate = None, winners = None, include_comments = False, include_executions = False, max_trades = 25, offset = 0):
     """Query for trades matching the specified criteria.
 
        All arguments to this method are optional. If not specified, they are not part of the query. 
@@ -318,7 +347,8 @@ class Tradervue:
        :param winners: Find trades where the P&L is positive (or negative for a ``False`` value).
        :param bool include_comments: If there are comments associated with the trade, include them in the results (the ``comments`` key will be a list of comments)
        :param bool include_executions: If there are executions associated with the trade, include them in the results (the ``executions`` key will be a list of comments)
-       :param max_trades: Return at most the specified number of trades. Specify ``None`` to return all trades.
+       :param max_trades: Return at most the specified number of trades. The maximum value here is determined by ``Tradervue.MAX_ALLOWED_OBJECT_REQUEST``
+       :param offset: Returns trades starting at the specified offset. Trades are returned newest first, so this can be used to query older trades.
        :type symbol: str or None
        :type tag_expr: str or None
        :type side: str or None
@@ -326,7 +356,8 @@ class Tradervue:
        :type startdate: date or datetime or None
        :type enddate: date or datetime or None
        :type winners: bool or None
-       :type max_trades: int or None
+       :type max_trades: int
+       :type offset: int
        :return: a list of trades matching the specified critiera or ``None`` if an error is encountered
        :rtype: list or None
     """
@@ -350,7 +381,7 @@ class Tradervue:
     if enddate is not None: data['enddate'] = enddate.strftime('%m/%d/%Y')
     if winners is not None: data['plgross'] = 'W' if winners else 'L'
 
-    all_trades = self.__get_objects('trades', data, 'trades', max_trades)
+    all_trades = self.__get_objects('trades', data, 'trades', max_trades, offset)
 
     if include_comments or include_executions:
       for trade in all_trades:
@@ -608,7 +639,7 @@ class Tradervue:
 
     return self.__create_object('users', username, data, return_url)
 
-  def get_journals(self, date = None, startdate = None, enddate = None, include_comments = False, max_journals = 25):
+  def get_journals(self, date = None, startdate = None, enddate = None, include_comments = False, max_journals = 25, offset = 0):
     """Query for journal entries matching the specified criteria.
 
        All arguments to this method are optional. If not specified, they are not part of the query. 
@@ -619,11 +650,13 @@ class Tradervue:
        :param startdate: Find journal entries occuring on or after the specified time. Do not use if ``date`` is specified.
        :param enddate: Find journal entries occuring on or before the specified time. Do not use if ``date`` is specified.
        :param bool include_comments: If there are comments associated with the journal entry, include them in the results (the ``comments`` key will be a list of comments)
-       :param max_journals: Return at most the specified number of journal entries. Specify ``None`` to return all journals
+       :param max_journals: Return at most the specified number of journal entries.
+       :param offset: Returns journal entries starting at the specified offset. Entries are returned newest first, so this can be used to query older entries.
        :type date: date or datetime or None
        :type startdate: date or datetime or None
        :type enddate: date or datetime or None
-       :type max_journals: int or None
+       :type max_journals: int
+       :type offset: int
        :return: a list of journal entries matching the specified critiera or ``None`` if an error is encountered
        :rtype: list or None
     """
@@ -635,7 +668,7 @@ class Tradervue:
     if startdate is not None: data['startdate'] = startdate.strftime('%m/%d/%Y')
     if enddate is not None: data['enddate'] = enddate.strftime('%m/%d/%Y')
 
-    all_journals = self.__get_objects('journal', data, 'journal_entries', max_journals)
+    all_journals = self.__get_objects('journal', data, 'journal_entries', max_journals, offset)
 
     if include_comments:
       for journal in all_journals:
@@ -722,18 +755,20 @@ class Tradervue:
     """
     return self.__delete_object('journal', journal_id)
 
-  def get_notes(self, include_comments = False, max_notes = 25):
+  def get_notes(self, include_comments = False, max_notes = 25, offset = 0):
     """Query for journal notes.
 
        The list returned from this method contains dict objects which have fields as defined in the `Tradervue Journal Notes Documentation <https://github.com/tradervue/api-docs/blob/master/notes.md>`_.
 
        :param bool include_comments: If there are comments associated with the note, include them in the results (the ``comments`` key will be a list of comments)
        :param max_notes: Return at most the specified number of journal notes. Specify ``None`` to return all notes.
-       :type max_notes: int or None
+       :param offset: Returns notes starting at the specified offset. Notes are returned newest first, so this can be used to query older notes.
+       :type max_notes: int
+       :type offset: int
        :return: a list of journal notes or ``None`` if an error is encountered
        :rtype: list or None
     """
-    all_notes = self.__get_objects('notes', {}, 'journal_notes', max_notes)
+    all_notes = self.__get_objects('notes', {}, 'journal_notes', max_notes, offset)
 
     if include_comments:
       for note in all_notes:
