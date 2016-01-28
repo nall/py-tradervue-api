@@ -230,10 +230,11 @@ class Tradervue:
     # Try to request as few as possible (max_objects), but we have to request the max if:
     #    * the user wants more than a page worth
     #    * the user request straddles a page
-    if (start_index + max_objects) > MAX_OBJECTS_PER_REQUEST or max_objects > MAX_OBJECTS_PER_REQUEST:
+    last_object_index = start_index + max_objects
+    if last_object_index > MAX_OBJECTS_PER_REQUEST:
       data['count'] = MAX_OBJECTS_PER_REQUEST
     else:
-      data['count'] = max_objects
+      data['count'] = last_object_index
 
     # Just determine the page offset to request
     data['page'] = int(math.floor((object_offset / MAX_OBJECTS_PER_REQUEST)))
