@@ -254,16 +254,16 @@ class Tradervue:
 
       cur_objects = self.__get_object(key, None, None, result_key, data, start_index, end_index)
       if cur_objects is None:
-        self.log.error("Found error condition when querying %s" % (data))
+        self.log.error("Found error condition when querying %s offset=%s [%s:%s]" % (data, object_offset, start_index, end_index))
         return None
       elif len(cur_objects) == 0:
-        self.log.debug("No objects were found when querying %s [%s:%s]" % (data, start_index, end_index))
+        self.log.debug("No objects were found when querying %s offset=%s [%s:%s]" % (data, object_offset, start_index, end_index))
         break
       else:
-        self.log.debug("%d object(s) were found when querying %s [%s:%s]" % (len(cur_objects), data, start_index, end_index))
+        self.log.debug("%d object(s) were found when querying %s offset=%s [%s:%s]" % (len(cur_objects), data, object_offset, start_index, end_index))
         objects.extend(cur_objects)
         # We ran out of data, so don't query again
-        if len(cur_objects) < data['count'] and start_index == 0:
+        if len(cur_objects) < (data['count'] - start_index):
           break
         # We're done if we have the number of objects requested by the user
         elif len(objects) >= max_objects:
@@ -295,12 +295,18 @@ class Tradervue:
           self.log.error("Unable to find '%s' key in %s results: %s" % (result_key, endpoint, r.text))
           return None
         else:
-          return result[result_key][start_index:end_index]
+          result = result[result_key]
       else:
-        return result[start_index:end_index]
+        # result is fine as-is
+        pass
     else:
       self.__handle_bad_http_response(r, "%s-GET[%s]%s: %s" % (endpoint.upper(), object_id, f_debug_string, color_text(Fore.RED, 'FAILED')), show_url = True)
       return None
+
+    if isinstance(result, list):
+      return result[start_index:end_index]
+    else:
+      return result
 
   def create_trade(self, symbol, notes = None, initial_risk = None, shared = False, tags = [], return_url = False):
     """Create a new trade. This is the equivalent of the 'New Trade' feature on the website.
