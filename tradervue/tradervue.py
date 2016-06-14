@@ -209,10 +209,10 @@ class Tradervue:
     url = '/'.join([self.baseurl, key, object_id])
     r = self.__put(url, data)
     if r.status_code == 200:
-      self.log.debug("%s-UPDATE[%s]: (%s) %s" % (key.upper(), object_id, ' '.join(data.keys()), color_text(Fore.GREEN, 'SUCCESS')))
+      self.log.debug("%s-UPDATE[%s]: (%s) %s" % (key.upper(), object_id, ' '.join(list(data.keys())), color_text(Fore.GREEN, 'SUCCESS')))
       return True
     else:
-      self.__handle_bad_http_response(r, "%s-UPDATE[%s]: (%s) %s" % (key.upper(), object_id, ' '.join(data.keys()), color_text(Fore.RED, 'FAILED')))
+      self.__handle_bad_http_response(r, "%s-UPDATE[%s]: (%s) %s" % (key.upper(), object_id, ' '.join(list(data.keys())), color_text(Fore.RED, 'FAILED')))
       return False
 
   def __get_objects(self, key, data, result_key = None, max_objects = 25, object_offset = 0):
@@ -668,7 +668,7 @@ class Tradervue:
        :rtype: list or None
     """
     if date is not None and (startdate is not None or enddate is not None):
-      raise ValueError, "Cannot specify startdate or enddate if date is specified"
+      raise ValueError("Cannot specify startdate or enddate if date is specified")
 
     data = { }
     if date is not None: data['d'] = date.strftime('%m/%d/%Y')
@@ -843,4 +843,3 @@ class Tradervue:
        :rtype: bool
     """
     return self.__delete_object('notes', note_id)
-
